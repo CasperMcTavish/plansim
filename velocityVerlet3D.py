@@ -18,7 +18,9 @@ from Particle3D import Particle3D
 
 #add the Gravitational constant
 G = 1
- 
+#create particle format
+
+
 def force_Newton(p1,p2, m1, m2):
     """
     Method to return the force on a particle
@@ -38,7 +40,7 @@ def force_Newton(p1,p2, m1, m2):
 
 def pot_energy_Newton(p1, p2, m1):
     """
-    Method to return potential energy 
+    Method to return potential energy
     of particle in Newton potential
 
     :param p1 and p2: Particle3D instances
@@ -56,7 +58,7 @@ def pot_energy_Newton(p1, p2, m1):
 def main():
     # Read name of the two input files from command line
     # Two inputfiles were chosen, one that has information about the particle while the other has information about the interaction
-    if len(sys.argv) != 3:
+    if len(sys.argv) != 2:
         print("Wrong number of arguments.")
         print("Usage: " + sys.argv[0] +" Another file")
         return
@@ -68,7 +70,7 @@ def main():
      #Open output files
     positions = open(inputfile_name1, "r")
     #potentials = open(inputfile_name2, "r")
-    
+
     # Set up simulation parameters.
     # User input is going to be the timestep dt and the amount of times the simulation will be run
     dt = float(input("The dt is taken to be: "))
@@ -78,25 +80,36 @@ def main():
     numstep = int(t_end/dt)
     #Initialise time. Note that the natural units given in the question are used. ie timestep is 10.18fs
     time = 0.0
-    
+
     #file_handle2 =potentials
     #De, re, g = Particle3D.from_file2(file_handle2)
     #De = float(De)
     #g = float(g)
     #re = float(re)
-    
+
 
     #Open another text file and extract information about the positiion of the particle and its velocity and create a Particle3D instance
     #This happens twice
     file_handle1 = positions
-    particle1 = Particle3D.from_file1(file_handle1)
-    particle2 = Particle3D.from_file1(file_handle1)
-    
-    
-    
+    i=1
+    #creates false beginning particle to allow initialisation with values 0 0 0 0 0 0 ...
+    particle= []
+    particle.append(Particle3D.from_file1(file_handle1))
+    #create loop to allow formation of each particle with limit of 41 (arbitrary, can be changed easily)
+    while True:
+        particle.append(Particle3D.from_file1(file_handle1))
+        #when particle is empty (list reading finished) end while loop
+        if particle[i] == None:
+            break
+        i+=1
+    #show particle number and completion
+    print("Particle Processing Complete, particles processed: " + str(len(particle)))
+
     # Get initial force
-    force0a = force_Newton(particle1.position,particle2.position, particle1.mass,particle2.mass)
-    force0b = -force0a
+    for f in range(len(particle)-1):
+        for g in (f+1):
+            force0a = force_Newton(particle[f+1].position,particle[g+1].position, particle[f+1].mass,particle[g+1].mass)
+            force0b = -force0a
     #Calculation of the Energy for both particles
     #Files are created for the 2 energies of both particles, and are written into.
     efile = open("energy.txt","w")
@@ -107,7 +120,7 @@ def main():
     sep = np.linalg.norm(Particle3D.seperation(particle1.position,particle2.position))
     sepfile = open("mysep.txt","w")
     sepfile.write(str(sep)+"\n")
-    
+
     # Initialise data lists for plotting later
     #Lists that will contain the time evolution of the position of both particles and their seperation as well as their energy will be taken
     #Since the position of particles is a numpy array, we need to find their norm so we can plot it
@@ -118,13 +131,13 @@ def main():
     pos2_list = [pos2]
     sep_list = [sep]
     energy_list = [energy]
-    
+
     #Start the integration loop
     for i in range(numstep):
         #Update the particle position
         particle1.step_pos2nd(dt,force0a)
         particle2.step_pos2nd(dt,force0b)
-        
+
         pos1 = np.linalg.norm(particle1.position)
         pos2 = np.linalg.norm(particle2.position)
         Particle3D.seperation(particle1.position,particle2.position)
@@ -132,31 +145,31 @@ def main():
         #Update Force
         force1 = force_Newton(particle1.position,particle2.position,  particle1.mass,particle2.mass)
         force2 = -force1
-        
+
         # Update particle velocity by averaging
         # current and new forces
         particle1.step_velocity(dt, 0.5*(force0a+force1))
         particle2.step_velocity(dt, 0.5*(force0b+force2))
-        
+
         # Re-define force value
         force0a = force1
         force0b = force2
         #Increase in time
         time += dt
-        
+
         # Output particle information
         energy = particle1.kinetic_energy() + pot_energy_Newton(particle1.position, particle2.position,particle1.mass)
-        
+
         efile.write(str(energy)+"\n")
 
         sepfile.write(str(sep)+"\n")
-        
+
 
         # Append information to data lists
         # Append information to data lists
         time_list.append(time)
         pos1_list.append(pos1)
-        pos2_list.append(pos2)    
+        pos2_list.append(pos2)
         sep_list.append(sep)
         energy_list.append(energy)
 
@@ -176,7 +189,7 @@ def main():
     pyplot.ylabel('Position/Angstroms')
     pyplot.plot(time_list, pos1_list,'r',label = "Particle1 Position")
     pyplot.plot(time_list, pos2_list,'b',label = "Particle2 Position")
-    
+
     pyplot.legend(loc = "best")
     pyplot.show()
 
@@ -198,4 +211,3 @@ def main():
 # Execute main method, but only when directly invoked
 if __name__ == "__main__":
     main()
-

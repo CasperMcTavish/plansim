@@ -5,7 +5,7 @@
  Through the use of the numpy library
  Author: Panayiotis Panayiotou
  StudentID:s1715899
- 
+
 """
 import numpy as np
 
@@ -29,7 +29,7 @@ class Particle3D(object):
     def __init__(self, label, mass, pos,vel):
         """
         Initialise a Particle3D instance
-        
+
         :param label: label as string
         :param pos: position as numpy array
         :param vel: velocity as numpy array
@@ -39,16 +39,16 @@ class Particle3D(object):
         self.velocity = vel
         self.mass = mass
         self.label = str(label)
-    
-    
+
+
     def __str__(self):
         """
         Define output format.
         The output will be a linewith four parameters: the label, and the x-y-z values of the position vector
         """
         return str(self.label)+" "+ str(self.pos[0])+" "+ str(self.pos[1]) +" "+str(self.pos[2])
-    
-    
+
+
     def kinetic_energy(self):
         """
         Calculates the kinetic energy  of 1 of the particles ie the one where our calculations of interactions is based on
@@ -58,8 +58,8 @@ class Particle3D(object):
         v = np.linalg.norm(self.velocity)
         v_squared = v**2
         return 0.5*self.mass*v_squared
-    
-    
+
+
     def step_velocity(self, dt, force):
         """
         First-order velocity update, as given in the lecture notes
@@ -71,8 +71,8 @@ class Particle3D(object):
         #Since velocity and Force are numpy arrays, we use operation overload for our advantage
         self.velocity += dt*force/self.mass
         #return self.velocity
-    
-    
+
+
     def step_pos1st(self, dt):
         """
         First-order position update,
@@ -97,12 +97,12 @@ class Particle3D(object):
         self.position += (dt*self.velocity + 0.5*dt**2*force/self.mass)
         #return self.position
 
-    
+
     """
     Static Method 1:
     Seperation distance.
     Computed by finding the difference between the two position vectors
-    
+
     :param1 p1: The first postion vector
     :param2 p2: The postion vector of the second vector
     """
@@ -114,25 +114,31 @@ class Particle3D(object):
     """
     Static Method 2:
     Reading off values from a text file
-    
+
     :param file_handle: gets values the values of mass position an velocity of the particles interacting
     """
     @staticmethod
     def from_file1(file_handle):
         #read content from file
-        #Write the actual code with the linesplit and stuff from last year
+        #Write the actual code with the linesplit and stuff from last year, will finish at '42' (arbitrary)
         line = file_handle.readline()
         tokens = line.split(" ")
-        pos = np.array([float(tokens[2]),float(tokens[3]),float(tokens[4])])
-        vel = np.array([float(tokens[5]),float(tokens[6]),float(tokens[7])])
-        #call Particle__init__method
-        return Particle3D(float(tokens[0]),float(tokens[1]),pos,vel)
-   
-    
+        #creates particle unless list is finished (due to 42 being reached in list)
+        if float(tokens[0]) != 42:
+            print(tokens[0] + tokens[1] + tokens[2] + tokens[3])
+            pos = np.array([float(tokens[2]),float(tokens[3]),float(tokens[4])])
+            vel = np.array([float(tokens[5]),float(tokens[6]),float(tokens[7])])
+            #returns Particle
+            return Particle3D(float(tokens[0]),float(tokens[1]),pos,vel)
+        #if list finished, return empty particle and confirm completion of reading.
+        else:
+            print("Particle Reading Complete")
+            return
+
     """
     Static Method 2:
     Reading off values from a text file
-    
+
     :param file_handle: gets values the values of mass position an velocity of the particles interacting
     """
     @staticmethod
@@ -142,6 +148,6 @@ class Particle3D(object):
         line = file_handle.readline()
         token = line.split(" ")
         De = token[0]
-        re = token[1] 
+        re = token[1]
         a = token[2]
         return De, re, a
