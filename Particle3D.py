@@ -1,9 +1,8 @@
-
 """
- CMod Ex2: Particle3D
+ CMod Project: Particle3D
  A class to describe 3D particles and their time evolution
  Through the use of the numpy library
- Author: Panayiotis Panayiotou
+ Author: Panayiotis Panayiotou, John Waiton
  StudentID:s1715899
 
 """
