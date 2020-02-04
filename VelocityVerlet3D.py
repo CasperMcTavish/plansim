@@ -102,23 +102,27 @@ def main():
     # Get initial force
     #Use the numpy module to create a matrix that will store the values of the force
     force_matrix = []
-    #NEED TO INCORPORATE THE NEGATIVE SIGNS.
+    ##NEED TO INCORPORATE THE NEGATIVE SIGNS.
     #WE CAN CHANGE IT TO BE LISTS OF LISTS. DISCUSS
     for f in range(0,len(particle)):
         ##It was for i in range (f+1), We got an error.##
         if particle[f] == None:
             break
         else:
-             for g in range(f+1,len(particle)):
+             for g in range(0,len(particle)):
                   if particle[g] == None:
                       break
                   else:
-                      force0a = np.linalg.norm((force_Newton(particle[f].position,particle[g].position, particle[f].mass,particle[g].mass)))
+                      force0a = force_Newton(particle[f].position,particle[g].position, particle[f].mass,particle[g].mass)
+                      force0b = -1*force0a
+                      if f < g:
                  # I obtain values for the xyz force of one molecule here. then error when 42 is used
-                      print(force0a)
-                      force_matrix = np.append(force_matrix,force0a)
-                      force0b = -force0a
-                  print(force_matrix)
+                          force_matrix = np.append(force_matrix,force0a)
+                          print(f, g)
+                      elif f > g:
+                          print(f, g)
+                          force_matrix = np.append(force_matrix,force0a)
+    print(force_matrix)
     #Calculation of the Energy for both particles
     #Files are created for the 2 energies of both particles, and are written into.
     efile = open("energy.txt","w")
