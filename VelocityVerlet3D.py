@@ -106,21 +106,34 @@ def main():
     ##FORCE APPLICATION COMPONENT - SHOULD BE FASTER, F12 = -F21 ISNT APPLIED, WORK ON THIS
 
     #WE CAN CHANGE IT TO BE LISTS OF LISTS. DISCUSS
+    #Looks in double nested loops for each particle interaction and adds to list the forces
     for f in range(0,len(particle)):
-        ##It was for i in range (f+1), We got an error.##
         if particle[f] == None:
             break
         else:
              for g in range(0,len(particle)):
-                 if f != g:
+                 #If we are repeating ourselves (f>g), take earlier values and invert them. Otherwise, continue with calculation
+                 if f>g:
+                     #elem is the 'pattern' created in our matrix to find the inverted value
+                     elem = f+4*g-1
+                     force0a = -force_matrix[elem]
+                     print(f, g)
+                     print(force0a)
+                     force_matrix.append(force0a)
+                 elif f != g:
                      if particle[g] == None:
                          break
                      else:
+                         ##Adjusted this code so force_matrix is now a list of [[F12],[F13],[F14]], this wasn't occurring before. Look at line 136
                          force0a = force_Newton(particle[f].position,particle[g].position, particle[f].mass,particle[g].mass)
-                 # I obtain values for the xyz force of one molecule here. then error when 42 is used
-                         force_matrix = np.append(force_matrix,force0a)
+                         ##Repetitive code from lines 120-122 - Could be improved
                          print(f, g)
-    print(force_matrix)
+                         print(force0a)
+                         force_matrix.append(force0a)
+
+    ##PRINTING THIS \/ OFF NOW IS REALLY MESSY
+    #print(force_matrix)
+    print(force_matrix[0])
     #Calculation of the Energy for both particles
     #Files are created for the 2 energies of both particles, and are written into.
     efile = open("energy.txt","w")
