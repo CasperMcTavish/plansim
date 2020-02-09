@@ -105,7 +105,7 @@ def main():
 
     ##FORCE APPLICATION COMPONENT - SHOULD BE FASTER, F12 = -F21 ISNT APPLIED, WORK ON THIS
 
-    #WE CAN CHANGE IT TO BE LISTS OF LISTS. DISCUSS
+
     #Looks in double nested loops for each particle interaction and adds to list the forces
     for f in range(0,len(particle)):
         if particle[f] == None:
@@ -135,15 +135,74 @@ def main():
     #print(force_matrix)
     print(force_matrix[0])
     #Calculation of the Energy for both particles
-    #Files are created for the 2 energies of both particles, and are written into.
-    efile = open("energy.txt","w")
-    energy = particle1.kinetic_energy() + pot_energy_Newton(particle1.position, particle2.position, particle1.mass)
-    efile.write(str(energy)+ "\n")
+    #To do so, we need to utilise the function created.
+    #A matrix of values is created
+    #Files are created for each energies of the particles, and are written into.
+    pot_matrix = []
+    for f in range(0,len(particle)):
+        if particle[f] == None:
+            break
+        ##The break function is powerful.
+        else:
+             for g in range(0,len(particle)):
+                 #If we are repeating ourselves (f>g), take earlier values and invert them. Otherwise, continue with calculation
+                 if f>g:
+                     #elem is the 'pattern' created in our matrix to find the inverted value
+                     elem = f+4*g-1
+                     potential = pot_matrix[elem]
+                     print(f, g)
+                     print(potential)
+                     pot_matrix.append(potential)
+                 elif f != g:
+                     if particle[g] == None:
+                         break
+                     else:
+                         potential = pot_energy_Newton(particle[f].position,particle[g].position, particle[f].mass)
+                         ##Repetitive code. Can create a function.
+                         print(f, g)
+                         print(potential)
+                         pot_matrix.append(potential)
+                         
+                         
+    ###WE NEED to add  ADD forces and potentials here###
+    
+    ###The following code results in 4 extra files. Resolution same as above
+    
+    #To create the energy file we need the potential energies of the particle.  Potiential energy should be positive
+    
+    ##First Attempt
+    efile=[]
+    for f in range(0,len(particle)):
+        if particle[f] == None:
+            break
+        else:
+            for j in range (0,len(particle)):
+                if particle[j]== None:
+                    break
+                else:
+                    efile = open("energy"+str(f)+str(j)+".txt","w")
+                    energy = particle[f].kinetic_energy() + pot_energy_Newton(particle[f].position, particle[j].position, particle[f].mass)
+                    efile.write(str(energy)+ "\n")
 
     #A file for dtoring the seperation of the two particles is being created and the values are being written into it
-    sep = np.linalg.norm(Particle3D.seperation(particle1.position,particle2.position))
-    sepfile = open("mysep.txt","w")
-    sepfile.write(str(sep)+"\n")
+    ##My idea FOR this part of the Code:: for each particle inetraction one file is created ie we should get in our case 16 files. That means it should implement both techniques used above
+    sep = []
+    for f in range(0,len(particle)):
+        if particle[f] == None:
+            break
+        else:
+             for g in range(0,len(particle)):
+                 #If we are repeating ourselves (f>g), take earlier values and invert them. Otherwise, continue with calculation
+                 if particle[g] == None:
+                     break
+                 else:
+                     sepfile = open("sep"+str(f)+str(g)+".txt","w")
+                     sep = np.linalg.norm(Particle3D.seperation(particle[f].position,particle[g].position))
+                     sepfile.write(str(sep)+ "\n")
+                         
+    #sep = np.linalg.norm(Particle3D.seperation(particle1.position,particle2.position))
+    #sepfile = open("mysep.txt","w")
+    #sepfile.write(str(sep)+"\n")
 
     # Initialise data lists for plotting later
     #Lists that will contain the time evolution of the position of both particles and their seperation as well as their energy will be taken
