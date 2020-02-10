@@ -193,13 +193,9 @@ def main():
         if particle[f] == None:
             break
         else:
-            for j in range (0,len(particle)-1):
-                if particle[j]== None:
-                    break
-                else:
-                    efile = open("energy"+str(f)+str(j)+".txt","w")
-                    energy = particle[f].kinetic_energy() + totalenergy[f]
-                    efile.write(str(energy)+ "\n")
+            efile = open("energy"+str(f)+".txt","w")
+            energy = particle[f].kinetic_energy() + totalenergy[f]
+            efile.write(str(energy)+ "\n")
 
     #A file for dtoring the seperation of the two particles is being created and the values are being written into it
     ##My idea FOR this part of the Code:: for each particle inetraction one file is created ie we should get in our case 16 files. That means it should implement both techniques used above
@@ -213,7 +209,7 @@ def main():
                  #If we are repeating ourselves (f>g), take earlier values and invert them. Otherwise, continue with calculation
                  if particle[g] == None:
                      break
-                 else:
+                 elif f!=g:
                      sepfile = open("sep"+str(f)+str(g)+".txt","w")
                      sep = np.linalg.norm(Particle3D.seperation(particle[f].position,particle[g].position))
                      sepfile.write(str(sep)+ "\n")
