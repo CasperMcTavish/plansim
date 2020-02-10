@@ -97,7 +97,7 @@ def main():
             break
         i+=1
     #show particle number and completion
-    print("Particle Processing Complete, particles processed: " + str(len(particle)))
+    print("Particle Processing Complete, particles processed: " + str(len(particle)-1))
 
     # Get initial force
     #Use the numpy module to create a matrix that will store the values of the force
@@ -107,11 +107,11 @@ def main():
 
 
     #Looks in double nested loops for each particle interaction and adds to list the forces
-    for f in range(0,len(particle)):
+    for f in range(0,len(particle)-1):
         if particle[f] == None:
             break
         else:
-             for g in range(0,len(particle)):
+             for g in range(0,len(particle)-1):
                  #If we are repeating ourselves (f>g), take earlier values and invert them. Otherwise, continue with calculation
                  if f>g:
                      #elem is the 'pattern' created in our matrix to find the inverted value
@@ -133,18 +133,19 @@ def main():
 
     ##PRINTING THIS \/ OFF NOW IS REALLY MESSY
     #print(force_matrix)
-    print(force_matrix[0])
-    #Calculation of the Energy for both particles
+
+
+    #Calculation of the Energy for both particles - Potential energy of Particle 1 on 2, on 3, etc
     #To do so, we need to utilise the function created.
     #A matrix of values is created
     #Files are created for each energies of the particles, and are written into.
     pot_matrix = []
-    for f in range(0,len(particle)):
+    for f in range(0,len(particle)-1):
         if particle[f] == None:
             break
         ##The break function is powerful.
         else:
-             for g in range(0,len(particle)):
+             for g in range(0,len(particle)-1):
                  #If we are repeating ourselves (f>g), take earlier values and invert them. Otherwise, continue with calculation
                  if f>g:
                      #elem is the 'pattern' created in our matrix to find the inverted value
@@ -162,36 +163,53 @@ def main():
                          print(f, g)
                          print(potential)
                          pot_matrix.append(potential)
-                         
-                         
+
+
     ###WE NEED to add  ADD forces and potentials here###
-    
+    totalenergy=[]
+    #Adding energies together
+    for f in range(0,len(particle)-1):
+        #Take 4 elements from list, E01,E02,etc and adds them together.
+        g = f*4
+        totalenergy.append(pot_matrix[g] + pot_matrix[g+1] + pot_matrix[g+2] + pot_matrix[g+3])
+
+    print("Energy")
+    print(totalenergy)
+
+    totalforce=[]
+    #Adding forces together
+    for f in range(0,len(particle)-1):
+        #Take 4 elements from list, E01,E02,etc and adds them together.
+        g = f*4
+        totalforce.append(force_matrix[g] + force_matrix[g+1] + force_matrix[g+2] + force_matrix[g+3])
     ###The following code results in 4 extra files. Resolution same as above
-    
+    print("Forces")
+    print(totalforce)
     #To create the energy file we need the potential energies of the particle.  Potiential energy should be positive
-    
-    ##First Attempt
+
+    ##First Attempt - TOTAL ENERGY OF PARTICLE 1, 2, 3, 4, 5
     efile=[]
-    for f in range(0,len(particle)):
+    for f in range(0,len(particle)-1):
         if particle[f] == None:
             break
         else:
-            for j in range (0,len(particle)):
+            for j in range (0,len(particle)-1):
                 if particle[j]== None:
                     break
                 else:
                     efile = open("energy"+str(f)+str(j)+".txt","w")
-                    energy = particle[f].kinetic_energy() + pot_energy_Newton(particle[f].position, particle[j].position, particle[f].mass)
+                    energy = particle[f].kinetic_energy() + totalenergy[f]
                     efile.write(str(energy)+ "\n")
 
     #A file for dtoring the seperation of the two particles is being created and the values are being written into it
     ##My idea FOR this part of the Code:: for each particle inetraction one file is created ie we should get in our case 16 files. That means it should implement both techniques used above
+    ##REMEMBER TO REMOVE ITERATIVE
     sep = []
-    for f in range(0,len(particle)):
+    for f in range(0,len(particle)-1):
         if particle[f] == None:
             break
         else:
-             for g in range(0,len(particle)):
+             for g in range(0,len(particle)-1):
                  #If we are repeating ourselves (f>g), take earlier values and invert them. Otherwise, continue with calculation
                  if particle[g] == None:
                      break
@@ -199,7 +217,7 @@ def main():
                      sepfile = open("sep"+str(f)+str(g)+".txt","w")
                      sep = np.linalg.norm(Particle3D.seperation(particle[f].position,particle[g].position))
                      sepfile.write(str(sep)+ "\n")
-                         
+
     #sep = np.linalg.norm(Particle3D.seperation(particle1.position,particle2.position))
     #sepfile = open("mysep.txt","w")
     #sepfile.write(str(sep)+"\n")
