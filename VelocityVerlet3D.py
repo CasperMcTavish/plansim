@@ -213,31 +213,44 @@ def main():
                      sepfile = open("sep"+str(f)+str(g)+".txt","w")
                      sep = np.linalg.norm(Particle3D.seperation(particle[f].position,particle[g].position))
                      sepfile.write(str(sep)+ "\n")
-
-    #sep = np.linalg.norm(Particle3D.seperation(particle1.position,particle2.position))
-    #sepfile = open("mysep.txt","w")
-    #sepfile.write(str(sep)+"\n")
-
+                 elif f>g:
+                     break
     # Initialise data lists for plotting later
     #Lists that will contain the time evolution of the position of both particles and their seperation as well as their energy will be taken
     #Since the position of particles is a numpy array, we need to find their norm so we can plot it
-    pos1 = np.linalg.norm(particle1.position)
-    pos2 = np.linalg.norm(particle2.position)
+
+    #Initialise VMD file creation
+    partfile = open("vmd"+".xyz","w")
+    partfile.write(str(len(particle)-1)+"\n"+"break \n")
+    #Write each initial position of each particle to the file
+    if i in range(0,len(particle)-1):
+        if particle[i] == None:
+            break
+        else:
+            partpos=Particle3D.__str__(particle[i])
+            partfile.write(partpos + "\n")
+
+    
     time_list = [time]
-    pos1_list = [pos1]
-    pos2_list = [pos2]
     sep_list = [sep]
     energy_list = [energy]
 
+    #Write initial positions to file
+
     #Start the integration loop
     for i in range(numstep):
-        #Update the particle position
-        particle1.step_pos2nd(dt,force0a)
-        particle2.step_pos2nd(dt,force0b)
+        #Update the particle position in a loop.
+        for i in range(0,len(particle)-1):
+            if particle[i] == None:
+                break
+            else:
+                particle[i].step_pos2nd(dt,force_matrix[i])
 
-        pos1 = np.linalg.norm(particle1.position)
-        pos2 = np.linalg.norm(particle2.position)
+        #update the positions
+        # pos1 = np.linalg.norm(particle1.position)
+        # pos2 = np.linalg.norm(particle2.position)
         Particle3D.seperation(particle1.position,particle2.position)
+        #update SEparation
         sep =np.linalg.norm(Particle3D.seperation(particle1.position,particle2.position))
         #Update Force
         force1 = force_Newton(particle1.position,particle2.position,  particle1.mass,particle2.mass)
@@ -260,7 +273,11 @@ def main():
         efile.write(str(energy)+"\n")
 
         sepfile.write(str(sep)+"\n")
-
+        
+        #Write positions to VMD file
+        for i in range(0,len(particle)-1):
+            position = Particle3D.__str__(particle[i])
+        
 
         # Append information to data lists
         # Append information to data lists
