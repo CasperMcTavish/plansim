@@ -13,7 +13,8 @@ from Particle3D import Particle3D
 
 #add the Gravitational constant
 #Units used: Astronimical Units(Au), Days, Solar Masses
-G = 0.000295897
+G = 1.44814E-10
+#1.44814E-10 for 0.01
 #create particle format
 
 
@@ -174,7 +175,7 @@ def main():
     for f in range(0,len(particle)-1):
         #Take 4 elements from list, E01,E02,etc and adds them together.
         g = f*(len(particle)-1)
-        totalenergy.append(np.sum(pot_matrix[:(len(particle)-1)]))
+        totalenergy.append(np.sum(pot_matrix[:(len(particle)-1)], axis = 0))
         if particle[f] == None:
             break
         else:
@@ -191,7 +192,7 @@ def main():
     for f in range(0,len(particle)-1):
         #Take 4 elements from list, E01,E02,etc and adds them together.
         g = f*(len(particle)-1)
-        totalforce.append(np.sum(force_matrix[:(len(particle)-1)]))
+        totalforce.append(np.sum(force_matrix[:(len(particle)-1)],axis = 0))
     ###The following code results in 4 extra files. Resolution same as above
     print("Forces")
     print(totalforce)
@@ -209,7 +210,6 @@ def main():
     #A file for dtoring the seperation of the two particles is being created and the values are being written into it
     ##My idea FOR this part of the Code:: for each particle inetraction one file is created ie we should get in our case 16 files. That means it should implement both techniques used above
     ##REMEMBER TO REMOVE - ITERATIVE
-    sep = []
     for f in range(0,len(particle)-1):
         if particle[f] == None:
             break
@@ -252,7 +252,10 @@ def main():
                 break
             else:
                 particle[f].step_pos2nd(dt,totalforce[f])
+    #wipe the force
 
+
+        #we dont need any other force
         #Updates Seperation & writes it to file
         for f in range(0,len(particle)-1):
             if particle[f] == None:
@@ -262,7 +265,7 @@ def main():
                      #If we are repeating ourselves (f>g), take earlier values and invert them. Otherwise, continue with calculation
                      if particle[g] == None:
                          break
-                     elif (f!=g and f<g):
+                     elif f != g and f < g:
                          sep = np.linalg.norm(Particle3D.seperation(particle[f].position,particle[g].position))
                          sepfile.write(str(sep)+ "\n")
 
@@ -294,11 +297,11 @@ def main():
                              force_matrix.append(force0a)
 
         #Total Force
-
+        totalforcenew = []
         for f in range(0,len(particle)-1):
             #Take 4 elements from list, F01,F02,etc and adds them together.
             g = f*(len(particle)-1)
-            totalforcenew.append(np.sum(force_matrix[:(len(particle)-1)])) #THIS IS WRONG
+            totalforcenew.append(np.sum(force_matrix[:(len(particle)-1)],axis = 0)) #THIS IS WRONG
 
 
 
@@ -311,7 +314,7 @@ def main():
 
 
         #Definining new totalforce
-        totalforcenew=totalforce
+        totalforce = totalforcenew
 
         #Increase in time
         time += dt
@@ -349,7 +352,7 @@ def main():
         for f in range(0,len(particle)-1):
             #Take 4 elements from list, E01,E02,etc and adds them together.
             g = f*(len(particle)-1)
-            totalenergy.append(np.sum(pot_matrix[:(len(particle)-1)]))
+            totalenergy.append(np.sum(pot_matrix[:(len(particle)-1)],axis = 0))
             if particle[f] == None:
                 break
             else:
@@ -365,8 +368,8 @@ def main():
             if particle[h] == None:
                 break
             else:
-                partpos=Particle3D.__str__(particle[h])
-                partfile.write(partpos + "\n")
+               partpos=Particle3D.__str__(particle[h])
+               partfile.write(partpos + "\n")
 
 
         # Append information to data lists
