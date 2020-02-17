@@ -210,6 +210,7 @@ def main():
     #A file for dtoring the seperation of the two particles is being created and the values are being written into it
     ##My idea FOR this part of the Code:: for each particle inetraction one file is created ie we should get in our case 16 files. That means it should implement both techniques used above
     ##REMEMBER TO REMOVE - ITERATIVE
+    
     for f in range(0,len(particle)-1):
         if particle[f] == None:
             break
@@ -222,6 +223,7 @@ def main():
                      sepfile = open("sep"+str(f)+str(g)+".txt","w")
                      sep = np.linalg.norm(Particle3D.seperation(particle[f].position,particle[g].position))
                      sepfile.write(str(sep)+ "\n")
+    
     # Initialise data lists for plotting later
     #Lists that will contain the time evolution of the position of both particles and their seperation as well as their energy will be taken
     #Since the position of particles is a numpy array, we need to find their norm so we can plot it
@@ -266,8 +268,9 @@ def main():
                      if particle[g] == None:
                          break
                      elif f != g and f < g:
-                         sep = np.linalg.norm(Particle3D.seperation(particle[f].position,particle[g].position))
-                         sepfile.write(str(sep)+ "\n")
+                         sepfile = open("sep"+str(f)+str(g)+".txt","a")
+                         sep = np.linalg.norm(Particle3D.seperation(particle[f].position, particle[g].position))
+                         sepfile.write(str(sep) + "\n")
 
         #Update Force
         #Wipe force matrix to be redefined
@@ -357,6 +360,7 @@ def main():
                 break
             else:
                 energy = particle[f].kinetic_energy() + totalenergy[f]
+                efile = open("energy"+str(f)+".txt","a")
                 efile.write(str(energy)+ "\n")
 
 

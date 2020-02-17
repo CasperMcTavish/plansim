@@ -93,8 +93,8 @@ class Particle3D(object):
         :param dt: timestep as float
         :param force: current force as float
         """
-        self.position += (dt*self.velocity + 0.5*dt**2*force/self.mass)
-        #return self.position
+        self.position += (dt*self.velocity + 0.5*(dt**2)*force/self.mass)
+        return self.position
 
 
     """
@@ -107,7 +107,7 @@ class Particle3D(object):
     """
     @staticmethod
     def seperation(p1,p2):
-        displ = -p1 + p2
+        displ = p1 - p2
         return displ
 
     """
@@ -123,7 +123,7 @@ class Particle3D(object):
         line = file_handle.readline()
         tokens = line.split(" ")
         #creates particle unless list is finished (due to 42 being reached in list)
-        if float(tokens[0]) != 42:
+        if  str(tokens[0]) != "END":
             print(tokens[0] + tokens[1] + tokens[2] + tokens[3])
             pos = np.array([float(tokens[2]),float(tokens[3]),float(tokens[4])])
             vel = np.array([float(tokens[5]),float(tokens[6]),float(tokens[7])])
