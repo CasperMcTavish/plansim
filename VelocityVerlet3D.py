@@ -13,10 +13,17 @@ from Particle3D import Particle3D
 
 #add the Gravitational constant
 #Units used: Astronimical Units(Au), Days, Solar Masses
-G = 1.44814E-10
+G = 4.98217402E-10 #Currently in km, kg and days
+#2.491627595E-59 for 1
 #1.44814E-10 for 0.01
 #create particle format
 
+#Creates array divider
+def divide_chunks(l, n):
+
+    # looping till length l
+    for i in range(0, len(l), n):
+        yield l[i:i + n]
 
 def force_Newton(p1,p2, m1, m2):
     """
@@ -32,10 +39,11 @@ def force_Newton(p1,p2, m1, m2):
     sep_scalar_vec = Particle3D.seperation(p1,p2)
     sep_scalar= np.linalg.norm(sep_scalar_vec)
    # force = (2*De*a*(1-math.exp(-a*(sep_scalar-re)))*(math.exp(-a*(sep_scalar-re))))*(sep_scalar_vec)/sep_scalar
-    force = (G*m1*m2*sep_scalar_vec)/(sep_scalar**3)
+    force = -(G*m1*m2*sep_scalar_vec)/(sep_scalar**3)
     return force
 
-def pot_energy_Newton(p1, p2, m1):
+##Added m2 section here, this allows us to mirror the arguments of force_Newton, and so can be passed in as a parameter in baseloop
+def pot_energy_Newton(p1, p2, m1, m2):
     """
     Method to return potential energy
     of particle in Newton potential
@@ -50,7 +58,47 @@ def pot_energy_Newton(p1, p2, m1):
     potential = (G*m1)/sep_scalar
     return potential
 
-#Begin Main code
+def baseloop(particle,fnc):
+    """
+    Method to process any function across
+    all planets and apply results to matrix
+
+    :param particle: Particle list
+    :param fnc: Function applied across said Particles, INCLUDING all conditions
+    :param matrix: matrix in which results are appended
+    :return: Matrix of applied force/energy in suitably size matrix
+    """
+    #example of use, totalF = baseloop(particle,force_Newton)
+    #Initial conditions
+    matrix=[]
+    #begin basic looping system, allows for looping across all planets
+    for f in range(0,len(particle)-1):
+        #No particle, break loop. Failsafe
+        if particle[f] == None:
+            break
+        else:
+             for g in range(0,len(particle)-1):
+                #If we are not testing against ourselves, apply function
+                ##Removed the f>g section because it didnt work, and was iterative.
+                ##Something to improve upon is make this not double count fncs
+                ##Obsolete version of this code available in main()
+                 if f != g:
+                     if particle[g] == None:
+                         break
+                     else:
+                         element = fnc(particle[f].position,particle[g].position, particle[f].mass,particle[g].mass)
+                         print(f, g)
+                         print(element)
+                         matrix.append(element)
+
+    #Separates array into sections based on size of array
+    spl_array = (list(divide_chunks(matrix, len(particle)-2)))
+    #Finds the sum of each chunk in x,y,z plane
+    total = [sum(l) for l in spl_array]
+    return total
+
+
+##########################Begin Main code#####################################
 #I have changed the whole procedure since we only need one file only. since the masses are essentailly in there. IVe Commented most things after checkup remove
 def main():
     # Read name of the two input files from command line
@@ -105,97 +153,40 @@ def main():
 
     # Get initial force
     #Use the numpy module to create a matrix that will store the values of the force
-    force_matrix = []
-
-    ##FORCE APPLICATION COMPONENT - SHOULD BE FASTER, F12 = -F21 ISNT APPLIED, WORK ON THIS
-
-
-    #Looks in double nested loops for each particle interaction and adds to list the forces
-    for f in range(0,len(particle)-1):
-        if particle[f] == None:
-            break
-        else:
-             for g in range(0,len(particle)-1):
-                 #If we are repeating ourselvforce0a = es (f>g), take earlier values and invert them. Otherwise, continue with calculation
-                 if f>g:
-                     #elem is the 'pattern' created in our matrix to find the inverted value
-                     elem = f+(len(particle)-1)*g-1
-                     force0a = -force_matrix[elem]
-                     print(f, g)
-                     print(force0a)
-                     force_matrix.append(force0a)
-                 elif f != g:
-                     if particle[g] == None:
-                         break
-                     else:
-                         ##Adjusted this code so force_matrix is now a list of [[F12],[F13],[F14]], this wasn't occurring before. Look at line 136
-                         force0a = force_Newton(particle[f].position,particle[g].position, particle[f].mass,particle[g].mass)
-                         ##Repetitive code from lines 120-122 - Could be improved
-                         print(f, g)
-                         print(force0a)
-                         force_matrix.append(force0a)
-
-    ##PRINTING THIS \/ OFF NOW IS REALLY MESSY
-    #print(force_matrix)
-
-
-    #Calculation of the Energy for both particles - Potential energy of Particle 1 on 2, on 3, etc
-    #To do so, we need to utilise the function created.
-    #A matrix of values is created
-    #Files are created for each energies of the particles, and are written into.
-    pot_matrix = []
-    for f in range(0,len(particle)-1):
-        if particle[f] == None:
-            break
-        ##The break function is powerful.
-        else:
-             for g in range(0,len(particle)-1):
-                 #If we are repeating ourselves (f>g), take earlier values and invert them. Otherwise, continue with calculation
-                 if f>g:
-                     #elem is the 'pattern' created in our matrix to find the inverted value
-                     elem = f+(len(particle)-1)*g-1
-                     potential = pot_matrix[elem]
-                     print(f, g)
-                     print(potential)
-                     pot_matrix.append(potential)
-                 elif f != g:
-                     if particle[g] == None:
-                         break
-                     else:
-                         potential = pot_energy_Newton(particle[f].position,particle[g].position, particle[f].mass)
-                         ##Repetitive code. Can create a function.
-                         print(f, g)
-                         print(potential)
-                         pot_matrix.append(potential)
-
-
-    ###WE NEED to add  ADD forces and potentials here###
-    totalenergy=[]
-    #Adding energies together
-    for f in range(0,len(particle)-1):
-        #Take 4 elements from list, E01,E02,etc and adds them together.
-        g = f*(len(particle)-1)
-        totalenergy.append(np.sum(pot_matrix[:(len(particle)-1)], axis = 0))
-        if particle[f] == None:
-            break
-        else:
-            efile = open("energy"+str(f)+".txt","w")
-            energy = particle[f].kinetic_energy() + totalenergy[f]
-            efile.write(str(energy)+ "\n")
-
-    print("Energy")
-    print(totalenergy)
-
     totalforce=[]
     totalforcenew = []
-    #Adding forces together
-    for f in range(0,len(particle)-1):
-        #Take 4 elements from list, E01,E02,etc and adds them together.
-        g = f*(len(particle)-1)
-        totalforce.append(np.sum(force_matrix[:(len(particle)-1)],axis = 0))
-    ###The following code results in 4 extra files. Resolution same as above
+
+    #Calculate initial total force
     print("Forces")
+    totalforce = baseloop(particle,force_Newton)
+
+
+    print("Total Forces")
     print(totalforce)
+
+    #Calculate inital total potential energy
+    print("Energies")
+    totalenergy = baseloop(particle,pot_energy_Newton)
+
+    #Write total energy to Files
+    for f in range(0,len(particle)-1):
+        efile = open("energy"+str(f)+".txt","w")
+        energy = particle[f].kinetic_energy() + totalenergy[f]
+        efile.write(str(energy)+ "\n")
+
+    print("Total Energy")
+    print(totalenergy)
+
+    ###########################################################################
+    #Total Force Calculations OBSOLETE
+    #Adding forces together
+    #for f in range(0,len(particle)-1):
+        #Take 4 elements from list, E01,E02,etc and adds them together.
+    #    g = f*(len(particle)-1)
+    #    totalforce.append(np.sum(force_matrix[:(len(particle)-1)],axis = 0))
+    ###The following code results in 4 extra files. Resolution same as above
+    ###########################################################################
+
     #To create the energy file we need the potential energies of the particle.  Potiential energy should be positive
 
     ##First Attempt - TOTAL ENERGY OF PARTICLE 1, 2, 3, 4, 5
@@ -210,7 +201,7 @@ def main():
     #A file for dtoring the seperation of the two particles is being created and the values are being written into it
     ##My idea FOR this part of the Code:: for each particle inetraction one file is created ie we should get in our case 16 files. That means it should implement both techniques used above
     ##REMEMBER TO REMOVE - ITERATIVE
-    
+
     for f in range(0,len(particle)-1):
         if particle[f] == None:
             break
@@ -223,7 +214,7 @@ def main():
                      sepfile = open("sep"+str(f)+str(g)+".txt","w")
                      sep = np.linalg.norm(Particle3D.seperation(particle[f].position,particle[g].position))
                      sepfile.write(str(sep)+ "\n")
-    
+
     # Initialise data lists for plotting later
     #Lists that will contain the time evolution of the position of both particles and their seperation as well as their energy will be taken
     #Since the position of particles is a numpy array, we need to find their norm so we can plot it
@@ -273,47 +264,20 @@ def main():
                          sepfile.write(str(sep) + "\n")
 
         #Update Force
-        #Wipe force matrix to be redefined
-        force_matrix=[]
+        print("Forces")
+        totalforcenew = baseloop(particle,force_Newton)
+
+        print("Step" + str(i))
+        print("Total Forces")
+        print(totalforcenew)
+
+
+        # Determine velocity of each particle
         for f in range(0,len(particle)-1):
             if particle[f] == None:
                 break
             else:
-                 for g in range(0,len(particle)-1):
-                     #If we are repeating ourselves (f>g), take earlier values and invert them. Otherwise, continue with calculation
-                     if f>g:
-                         #elem is the 'pattern' created in our matrix to find the inverted value
-                         elem = f+(len(particle)-1)*g-1
-                         force0a = -force_matrix[elem]
-                         print(f, g)
-                         print(force0a)
-                         force_matrix.append(force0a)
-                     elif f != g:
-                         if particle[g] == None:
-                             break
-                         else:
-                             ##Adjusted this code so force_matrix is now a list of [[F12],[F13],[F14]], this wasn't occurring before. Look at line 136
-                             force0a = force_Newton(particle[f].position,particle[g].position, particle[f].mass,particle[g].mass)
-                             ##Repetitive code from lines 120-122 - Could be improved
-                             print(f, g)
-                             print(force0a)
-                             force_matrix.append(force0a)
-
-        #Total Force
-        totalforcenew = []
-        for f in range(0,len(particle)-1):
-            #Take 4 elements from list, F01,F02,etc and adds them together.
-            g = f*(len(particle)-1)
-            totalforcenew.append(np.sum(force_matrix[:(len(particle)-1)],axis = 0)) #THIS IS WRONG
-
-
-
-        # current and new forces
-        for f in range(0,len(particle)-1):
-            if particle[f] == None:
-                break
-            else:
-                particle[f].step_velocity(dt,(totalforce[f]+totalforcenew[f])) #0.5
+                particle[f].step_velocity(dt,0.5*(totalforce[f]+totalforcenew[f])) #0.5
 
 
         #Definining new totalforce
@@ -322,46 +286,18 @@ def main():
         #Increase in time
         time += dt
 
-        # Output particle information
-        pot_matrix = []
-        for f in range(0,len(particle)-1):
-            if particle[f] == None:
-                break
-            ##The break function is powerful.
-            else:
-                 for g in range(0,len(particle)-1):
-                     #If we are repeating ourselves (f>g), take earlier values and invert them. Otherwise, continue with calculation
-                     if f>g:
-                         #elem is the 'pattern' created in our matrix to find the inverted value
-                         elem = f+(len(particle)-1)*g-1
-                         potential = pot_matrix[elem]
-                         print(f, g)
-                         print(potential)
-                         pot_matrix.append(potential)
-                     elif f != g:
-                         if particle[g] == None:
-                             break
-                         else:
-                             potential = pot_energy_Newton(particle[f].position,particle[g].position, particle[f].mass)
-                             ##Repetitive code. Can create a function.
-                             print(f, g)
-                             print(potential)
-                             pot_matrix.append(potential)
+        # Determine potential energy
+        print("Energies")
+        totalenergy = baseloop(particle,pot_energy_Newton)
 
-
-        ###WE NEED to add  ADD forces and potentials here###
-        totalenergy=[]
-        #Adding energies together
+        #Write total energy to Files
         for f in range(0,len(particle)-1):
-            #Take 4 elements from list, E01,E02,etc and adds them together.
-            g = f*(len(particle)-1)
-            totalenergy.append(np.sum(pot_matrix[:(len(particle)-1)],axis = 0))
-            if particle[f] == None:
-                break
-            else:
-                energy = particle[f].kinetic_energy() + totalenergy[f]
-                efile = open("energy"+str(f)+".txt","a")
-                efile.write(str(energy)+ "\n")
+            efile = open("energy"+str(f)+".txt","w")
+            energy = particle[f].kinetic_energy() + totalenergy[f]
+            efile.write(str(energy)+ "\n")
+
+        print("Total Energy")
+        print(totalenergy)
 
 
 
