@@ -3,7 +3,7 @@
  A class to describe 3D particles and their time evolution
  Through the use of the numpy library
  Author: Panayiotis Panayiotou, John Waiton
- StudentID:s1715899
+ StudentID:s1715899, s1739002
 
 """
 import numpy as np
@@ -146,7 +146,7 @@ class Particle3D(object):
         #Write the actual code with the linesplit and stuff from last year
         line = file_handle.readline()
         token = line.split(" ")
-        De = token[0]
-        re = token[1]
-        a = token[2]
-        return De, re, a
+        G = token[0]
+        dt = token[1]
+        time_end = token[2]
+        return G,dt,time_end
