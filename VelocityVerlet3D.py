@@ -13,14 +13,17 @@ from Particle3D import Particle3D
 
 #add the Gravitational constant
 #Units used: km, kg and days
-G = 4.98217402E-10 
+G = 4.98217402E-10
 #create particle format
 
+##files neeeding loaded in, particle positions, velocities & constants (numstep, dt, G)
+##Particle positions taken from 28th February 2020 from NASA
+
 #Creates array divider
-#This function is needed so that Forces are added in chunks 
+#This function is needed so that Forces are added in chunks
 def divide_chunks(l, n):
     """
-    Method to divide a list, specifically the force matrix so that, forces are added consistently. 
+    Method to divide a list, specifically the force matrix so that, forces are added consistently.
 
     :param l: Parameter l is a list.
     :param n: Parameter n is the step size
@@ -92,8 +95,8 @@ def baseloop(particle,fnc):
                          break
                      else:
                          element = fnc(particle[f].position,particle[g].position, particle[f].mass,particle[g].mass)
-                         print(f, g)
-                         print(element)
+                         #print(f, g)
+                         #print(element)
                          matrix.append(element)
 
     #Separates array into sections based on size of array
@@ -109,8 +112,8 @@ def main():
     # Two inputfiles were chosen, one that has information about the particles
     # while the other has information about the interaction and the amount of iterations carried.
     if len(sys.argv) != 3:
-        print("Wrong number of arguments.")
-        print("Usage: " + sys.argv[0] + sys.argv[1] +" Another file")
+        #print("Wrong number of arguments.")
+        #print("Usage: " + sys.argv[0] + sys.argv[1] +" Another file")
         return
     else:
 
@@ -120,17 +123,17 @@ def main():
      #Open output files
     positions = open(inputfile_name1, "r")
     int_param = open(inputfile_name2, "r")
-    
+
     # Set up simulation parameters.
     #To portray real physics, the user is asked to input the time the procedure is finished, rather than the amount of steps taken.
-    file_handle2 = int_param 
+    file_handle2 = int_param
     G,dt,time_end = Particle3D.from_file2(file_handle2)
     G = float(G)
     dt = float(dt)
     time_end = float(time_end)
 
 
-    
+
 #    # User input is going to be the timestep dt and the amount of times the simulation will be run
 #    dt = float(input("The dt is taken to be: "))
 #    #To portray real physics, the user is asked to input the time the procedure is finished, rather than the amount of steps taken.
@@ -165,14 +168,14 @@ def main():
 
     #Calculate initial total force
     totalforce = baseloop(particle,force_Newton)
-    print("Total Forces")
-    print(totalforce)
+    #print("Total Forces")
+    #print(totalforce)
 
-  
+
     #Calculate inital total potential energy
-    print("Energies")
+    #print("Energies")
     #To create the energy file we need the potential energies of the particle.
-    totalenergy = baseloop(particle,pot_energy_Newton) 
+    totalenergy = baseloop(particle,pot_energy_Newton)
 
     #Write total energy to Files
     energy_list = []
@@ -182,10 +185,10 @@ def main():
         efile.write(str(energy)+ "\n")
         energy_list.append(energy)
 
-    print("Total Energy")
+    #print("Total Energy")
     #print(totalenergy)
-    
-    
+
+
     #A file or a list for storing the seperation of the two particles is being created and the values are being written into it
     ##REMEMBER TO REMOVE - ITERATIVE
     for f in range(0,len(particle)-1):
@@ -201,7 +204,7 @@ def main():
                      sep = np.linalg.norm(Particle3D.seperation(particle[f].position,particle[g].position))
                      sepfile.write(str(sep)+ "\n")
 
-   
+
     #Initialise VMD file creation
     partfile = open("vmd"+".xyz","w")
     partfile.write(str(len(particle)-1)+"\n"+"break \n")
@@ -245,12 +248,12 @@ def main():
                          sepfile.write(str(sep) + "\n")
 
         #Update Force
-        print("Forces")
+        #print("Forces")
         totalforcenew = baseloop(particle,force_Newton)
 
         print("Step" + str(i))
-        print("Total Forces")
-        print(totalforcenew)
+        #print("Total Forces")
+        #print(totalforcenew)
 
 
         # Determine velocity of each particle
@@ -268,7 +271,7 @@ def main():
         time += dt
 
         # Determine potential energy
-        print("Energies")
+        #print("Energies")
         totalenergy = baseloop(particle,pot_energy_Newton)
 
         #Write total energy to Files
@@ -277,8 +280,8 @@ def main():
             energy = particle[f].kinetic_energy() + totalenergy[f]
             efile.write(str(energy)+ "\n")
 
-        print("Total Energy")
-        print(totalenergy)
+        #print("Total Energy")
+        #print(totalenergy)
 
 
 
@@ -314,7 +317,7 @@ def main():
     pyplot.plot(time_list, energy_list,'r', label ="Particle1 Energy" )
     pyplot.legend(loc = "best")
     pyplot.show()
-    
+
 # Execute main method, but only when directly invoked
 if __name__ == "__main__":
     main()
