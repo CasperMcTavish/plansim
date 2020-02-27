@@ -19,7 +19,7 @@ G = 4.98217402E-10
 ##files neeeding loaded in, particle positions, velocities & constants (numstep, dt, G)
 ##Particle positions taken from 28th February 2020 from NASA
 
-#Create a general function that will be used to calculate both Kinietic energy and potential ENERGY
+#Create a general function that will be used to calculate both Kinetic energy and potential energy
 def newton(p1, p2, m1, m2):
     """
     Method to return potential energy and force
@@ -36,7 +36,7 @@ def newton(p1, p2, m1, m2):
     return force, potential
 
 
-#A function is created to condense the code as this block of code is repeated.
+#A function is created to condense the code as this block of code is repeated throughout.
 def baseloop(particle):
     """
     Method to process any function across
@@ -45,13 +45,14 @@ def baseloop(particle):
     :param particle: Particle list
     :return: Matrix of applied force/energy in suitably sized matrix
     """
-    #example of use, totalF = baseloop(particle,force_Newton)
+    #example of use: totalF = baseloop(particle,force_Newton)
     #Initial conditions
 
-    #Creates w lists, each with h elements.
+    #Creates w lists, each with h elements. Effectively,creating a list of lists
     #For our use, each list is a particle, each element is a force
     #to initialise our matrices we use list comprehensions.
     w, h = (len(particle)),(len(particle)-1);
+    #fmatrix will hold the forces, pmatrix holds the potentials.
     fmatrix=[[0 for x in range(w)] for y in range(h)]
     pmatrix=[[0 for x in range(w)] for y in range(h)]
     #begin basic looping system, allows for looping across all planets
@@ -92,7 +93,7 @@ def apoperi(particle, apo, peri):
     """
     #Loop for all planets except sun
     for f in range(1,len(particle)-2):
-        #All separations excluding the moon, since moon is placed innthe last positionin the poskms file
+        #All separations excluding the moon. Special consideration for the moon.
         if f != 4:
             #Calculate separation
             sep = np.linalg.norm(Particle3D.seperation(particle[0].position,particle[f].position))
@@ -257,9 +258,11 @@ def main():
 
     ###################TIME PERIOD CODE########################
     #IDEA: Take the initial position of each object. Take cross product with new position and measure the times we have a change of sign.
-    p_const_initial = [[particle[i].position] for i in range(0,len(particle)-1)]
+    p_const_initial = []
+    counter = np.zeros((len(particle)-1))
+    for i in range(0,len(particle)-1):
+         p_const_initial.append(particle[i].position)
     print(p_const_initial)
-
     #################TIME INTEGRATION LOOP BEGINS#################
     for i in range(0,time_end,dt):
 
@@ -269,18 +272,16 @@ def main():
                 break
             else:
                 particle[f].step_pos2nd(dt,totalforce[f])
-
+                
         #########APO AND PERIAPSES CODE#########
         apo, peri = apoperi(particle, apo, peri)
 
         #########TIME PERIOD CODE######
-        counter = np.zeros((len(particle)-1))
-        add_matrix = np.ones((len(particle)-1))/2
-        print(counter)
-        print(add_matrix)
-        for c in range(0,len(particle)-1):
-            if (np.cross(p_const_initial[c],particle[c].position)).any() <= 0:
-                counter[i] =1
+        for c in range(1,len(particle)-1):
+            cross_prod = np.cross(p_const_initial[c],particle[c].position) #this result to zero
+            print(cross_prod)
+            if cross_prod.any() < np.zeros(3).any():
+                counter[c] = counter[c]+1
                 p_const_initial[c] = -p_const_initial[c]
 
 
