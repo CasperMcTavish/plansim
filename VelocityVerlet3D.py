@@ -19,6 +19,7 @@ G = 4.98217402E-10
 ##files neeeding loaded in, particle positions, velocities & constants (numstep, dt, G)
 ##Particle positions taken from 28th February 2020 from NASA
 
+#Create a general function that will be used to calculate both Kinietic energy and potential ENERGY
 def newton(p1, p2, m1, m2):
     """
     Method to return potential energy and force
@@ -35,7 +36,7 @@ def newton(p1, p2, m1, m2):
     return force, potential
 
 
-
+#A function is created to condense the code as this block of code is repeated.
 def baseloop(particle):
     """
     Method to process any function across
@@ -49,6 +50,7 @@ def baseloop(particle):
 
     #Creates w lists, each with h elements.
     #For our use, each list is a particle, each element is a force
+    #to initialise our matrices we use list comprehensions.
     w, h = (len(particle)),(len(particle)-1);
     fmatrix=[[0 for x in range(w)] for y in range(h)]
     pmatrix=[[0 for x in range(w)] for y in range(h)]
@@ -90,7 +92,7 @@ def apoperi(particle, apo, peri):
     """
     #Loop for all planets except sun
     for f in range(1,len(particle)-2):
-        #All separations excluding the moon
+        #All separations excluding the moon, since moon is placed innthe last positionin the poskms file
         if f != 4:
             #Calculate separation
             sep = np.linalg.norm(Particle3D.seperation(particle[0].position,particle[f].position))
@@ -253,6 +255,10 @@ def main():
     #Initiate calculation of initial apo and periapses
     apo, peri = apoperi(particle, apo, peri)
 
+    ###################TIME PERIOD CODE########################
+    #IDEA: Take the initial position of each object. Take cross product with new position and measure the times we have a change of sign.
+    p_const_initial = [[particle[i].position] for i in range(0,len(particle)-1)]
+    print(p_const_initial)
 
     #################TIME INTEGRATION LOOP BEGINS#################
     for i in range(0,time_end,dt):
@@ -266,6 +272,16 @@ def main():
 
         #########APO AND PERIAPSES CODE#########
         apo, peri = apoperi(particle, apo, peri)
+
+        #########TIME PERIOD CODE######
+        counter = np.zeros((len(particle)-1))
+        add_matrix = np.ones((len(particle)-1))/2
+        print(counter)
+        print(add_matrix)
+        for c in range(0,len(particle)-1):
+            if (np.cross(p_const_initial[c],particle[c].position)).any() <= 0:
+                counter[i] =1
+                p_const_initial[c] = -p_const_initial[c]
 
 
         ######NEW FORCE AND ENERGY CALCULATION#####
@@ -321,6 +337,7 @@ def main():
     efile.close()
     partfile.close()
 
+    print(counter)
     #Write apo and periapses to files
     apfile = open("apoperifile.txt", "w")
     #creates loop to make readable while skipping repetition
