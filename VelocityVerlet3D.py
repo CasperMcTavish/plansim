@@ -10,7 +10,6 @@ import matplotlib.pyplot as pyplot
 from Particle3D import Particle3D
 
 
-
 #add the Gravitational constant
 #Units used: km, kg and days
 G = 4.98217402E-10
@@ -78,51 +77,96 @@ def baseloop(particle):
     return ftotal, ptotal
 
 
+def apoperi(particle, apo, peri):
+    """
+    Method to update the apo and periapsis of each particle
+    with respect to the sun for all particles except the moon
+    which is with respect to Earth
 
+    :param particle: Particle list
+    :param apo: Existing apoapses list
+    :param peri: Existing periapses list
+    :return: Lists of all particles' updated apo- and periapses
+    """
+    #Loop for all planets except sun
+    for f in range(1,len(particle)-2):
+        #All separations excluding the moon
+        if f != 4:
+            #Calculate separation
+            sep = np.linalg.norm(Particle3D.seperation(particle[0].position,particle[f].position))
+            #Determine if new apoapsis
+            if apo[f] == None:
+                apo[f] = sep
+            elif (sep > apo[f]):
+                apo[f] = sep
 
-##########################Begin Main code#####################################
+            #Determine if new periapsis
+            #If no periapsis exists
+            if peri[f] == None:
+                peri[f] = sep
+            elif (sep < peri[f]):
+                peri[f] = sep
+        #For the moon, relative to the Earth
+        else:
+            #Calculate separation, assuming Earth is particle 3
+            sep = np.linalg.norm(Particle3D.seperation(particle[3].position,particle[f].position))
+            #Determine if new apoapsis
+            if apo[f] == None:
+                apo[f] = sep
+            elif (sep > apo[f]):
+                apo[f] = sep
+
+            #Determine if new periapsis
+            if peri[f] == None:
+                peri[f] = sep
+            elif (sep < peri[f]):
+                peri[f] = sep
+    return apo, peri
+
+##########################BEGIN MAIN CODE########################################
 def main():
     # Read name of the two input files from command line
     # Two inputfiles were chosen, one that has information about the particles
     # while the other has information about the interaction and the amount of iterations carried.
+    # code written; python3 Velocityverlet.py poskms.txt numsteps.txt
+    ##Need to add vmd.xyz as argument?
+
+    ############### FILE HANDLING #############
+    ##Does this need to be here anymore? Should we adjust this to ask for the right amount of files?
     if len(sys.argv) != 3:
         #print("Wrong number of arguments.")
         #print("Usage: " + sys.argv[0] + sys.argv[1] +" Another file")
         return
     else:
-
+        #Collect input filenames
         inputfile_name1 = sys.argv[1]
         inputfile_name2 = sys.argv[2]
 
-     #Open output files
+    # Open input files
     positions = open(inputfile_name1, "r")
     int_param = open(inputfile_name2, "r")
 
-    # Set up simulation parameters.
-    #To portray real physics, the user is asked to input the time the procedure is finished, rather than the amount of steps taken.
+    # Collect simulation parameters from 2nd input file
+
+    # To portray real physics, the user is asked to input the time the procedure is finished, rather than the amount of steps taken.
+    ##I think ^^^ this comment is no longer true, I've added it as a question to ask on tuesday.
     file_handle2 = int_param
     G,dt,time_end = Particle3D.from_file2(file_handle2)
+    #Convert from string to float and int
     G = float(G)
     dt = int(dt)
     time_end = int(time_end)
-    #this is only included so I dont have to remove numstep
+    ##this is only included so I dont have to remove numstep, can remove
 
-#    # User input is going to be the timestep dt and the amount of times the simulation will be run
-#    dt = float(input("The dt is taken to be: "))
-#    #To portray real physics, the user is asked to input the time the procedure is finished, rather than the amount of steps taken.
-#    t_end = float(input("Please specify the end time as an integer: "))
-#    #The number of steps which are needed in the time integration are shown below
-    numstep = int(time_end/dt)
-    #Initialise time. Note that the natural units given in the question are used. ie timestep is 10.18fs
-    time = 0.0
+    ######################PARTICLE CREATION#####################
 
+    # Initialise particle list
+    particle= []
 
-
-    #Open another text file and extract information about the positiion of the particles and their velocity and creates Particle3D instances stored in list
+    # Extract information from file about the positions of the particles and their velocity, create Particle3D instances stored in list
     file_handle1 = positions
     i=1
-#initialisation to be stored in fields.
-    particle= []
+
     particle.append(Particle3D.from_file1(file_handle1))
     #create loop to allow formation of each particle.
     while True:
@@ -134,11 +178,39 @@ def main():
     #show particle number and completion
     print("Particle Processing Complete, particles processed: " + str(len(particle)-1))
 
-    # Get initial force
-    #Use the numpy module to create a matrix that will store the values of the force
+    ##################### VARIABLE INITIALISATION ###########################
+
+    ##This section doesn't include all variable initialisation, but ones that are used in time integration extensively
+    # Initialise time. Note that the natural units given in the question are used.
+    time = 0.0
+
+    # Initial force & energy
+    # Use the numpy module to create a matrix that will store the values of the force
     totalforce=[]
     totalforcenew = []
     totalenergy = []
+
+    # Initialise data lists for plotting later
+    # Lists that will contain the time evolution of the position of both particles and their seperation as well as their energy will be taken
+    # Since the position of particles is a numpy array, we need to find their norm so we can plot it
+    time_list = [time]
+
+    #Labelling each particle
+    ##Should be based on poskms or some other file. Kind of hard-code-y but useful right now.
+    plabel = []                                 #Particle No.           #Read in from position file as
+    plabel.append("Sol")                        #particle 0             1
+    plabel.append("Mercury")                    #particle 1             2
+    plabel.append("Venus")                      #particle 2             3
+    plabel.append("Earth")                      #particle 3             4
+    plabel.append("Moon")                       #particle 4             5
+    plabel.append("Mars")                       #particle 5             6
+    plabel.append("Jupiter")                    #particle 6             7
+    plabel.append("Saturn")                     #particle 7             8
+    plabel.append("Uranus")                     #particle 8             9
+    plabel.append("Neptune")                    #particle 9             10
+    plabel.append("Pluto")                      #particle 10            11
+    plabel.append("Halley's Comet")             #particle 11            12
+
 
     #Calculate initial total force & total potential energy
     totalforce, potenergy = baseloop(particle)
@@ -147,14 +219,15 @@ def main():
     #print("Total Energy")
     #print(potenergy)
 
-    #Open FILES
+
+
+    #####################WRITING TO FILES#####################
+    #Open Files
     efile = open("energy.txt","w")
     partfile = open("vmd"+".xyz","w")
 
-    #####################WRITING TO FILES#####################
     #Write total energy to Files
     #Resetting energy value
-    #Write total energy to Files
     energy = []
     #Write break section of particle
     partfile.write(str(len(particle)-1)+"\n"+"break \n")
@@ -173,57 +246,29 @@ def main():
     efile.write(str(sum(energy))+ "\n")
 
 
+    ###############APO AND PERIAPSES CODE##################
+    #Initialise apo and periapsis lists of required length
+    apo = [None] * (len(particle)-2)
+    peri = [None] * (len(particle)-2)
+    #Initiate calculation of initial apo and periapses
+    apo, peri = apoperi(particle, apo, peri)
 
 
-    #A file or a list for storing the seperation of the two particles is being created and the values are being written into it
-    ##REMEMBER TO REMOVE - ITERATIVE
-    for f in range(0,len(particle)-1):
-        if particle[f] == None:
-            break
-        else:
-             for g in range(0,len(particle)-1):
-                 #If we are repeating ourselves (f>g), take earlier values and invert them. Otherwise, continue with calculation
-                 if particle[g] == None:
-                     break
-                 elif (f!=g and f<g):
-                     sepfile = open("sep"+str(f)+str(g)+".txt","w")
-                     sep = np.linalg.norm(Particle3D.seperation(particle[f].position,particle[g].position))
-                     sepfile.write(str(sep)+ "\n")
-
-
-
-
-    # Initialise data lists for plotting later
-    #Lists that will contain the time evolution of the position of both particles and their seperation as well as their energy will be taken
-    #Since the position of particles is a numpy array, we need to find their norm so we can plot it
-    time_list = [time]
-    sep_list = [sep]
-    energy_list = [totalenergy]
-
-    #################TIME INTEGRATION LOOP#################
+    #################TIME INTEGRATION LOOP BEGINS#################
     for i in range(0,time_end,dt):
-        #Update the particle position in a loop.
+
+        # Determine new position of each particle
         for f in range(0,len(particle)-1):
             if particle[f] == None:
                 break
             else:
                 particle[f].step_pos2nd(dt,totalforce[f])
 
-        #Updates Seperation & writes it to file
-        for f in range(0,len(particle)-1):
-            if particle[f] == None:
-                break
-            else:
-                 for g in range(0,len(particle)-1):
-                     #If we are repeating ourselves (f>g), take earlier values and invert them. Otherwise, continue with calculation
-                     if particle[g] == None:
-                         break
-                     elif f != g and f < g:
-                         sepfile = open("sep"+str(f)+str(g)+".txt","a")
-                         sep = np.linalg.norm(Particle3D.seperation(particle[f].position, particle[g].position))
-                         sepfile.write(str(sep) + "\n")
+        #########APO AND PERIAPSES CODE#########
+        apo, peri = apoperi(particle, apo, peri)
 
-        #Update Force, determine new position's potential
+
+        ######NEW FORCE AND ENERGY CALCULATION#####
         totalforcenew, potenergy = baseloop(particle)
 
         #Sets how often the progress is shown to the user, can be edited to suit the user.
@@ -269,13 +314,25 @@ def main():
         time_list.append(time)
         #sep_list.append(sep)
 
-
+    ########################TIME INTEGRATION LOOP ENDS############################
 
     # Post-simulation:
-    # Close all output file
+    # Close energy and vmd output files
     efile.close()
-    sepfile.close()
     partfile.close()
+
+    #Write apo and periapses to files
+    apfile = open("apoperifile.txt", "w")
+    #creates loop to make readable while skipping repetition
+    for f in range(0,len(particle)-2):
+        apfile.write("=============================== \n")
+        apfile.write("Particle " + str(particle[f].label) + " - " + str(plabel[f]) + (" \n"))
+        apfile.write("Apoapsis - " + str(apo[f]) + " \n" + "Periapsis - " + str(peri[f]) + " \n")
+    apfile.write("=============================== \n")
+
+    #close file
+    apfile.close()
+
 
     # Plot Total Energy of the system.
     pyplot.title('Velocity Verlet integrator: total energy vs time')
