@@ -13,7 +13,7 @@ from Particle3D import Particle3D
 
 #add the Gravitational constant
 #Units used: Astronimical Units(Au), Days, Solar Masses
-G = 0.000295897
+G = 0.0295897
 #create particle format
 
 
@@ -31,7 +31,7 @@ def force_Newton(p1,p2, m1, m2):
     sep_scalar_vec = Particle3D.seperation(p1,p2)
     sep_scalar= np.linalg.norm(sep_scalar_vec)
    # force = (2*De*a*(1-math.exp(-a*(sep_scalar-re)))*(math.exp(-a*(sep_scalar-re))))*(sep_scalar_vec)/sep_scalar
-    force = (G*m1*m2*sep_scalar_vec)/(sep_scalar**3)
+    force = -(G*m1*m2*sep_scalar_vec)/(sep_scalar**3)
     return force
 
 def pot_energy_Newton(p1, p2, m1):
@@ -86,6 +86,7 @@ def main():
 
     #Open another text file and extract information about the positiion of the particle and its velocity and create a Particle3D instance
     #This happens twice
+
     file_handle1 = positions
     i=1
     #creates false beginning particle to allow initialisation with values 0 0 0 0 0 0 ...
@@ -294,7 +295,7 @@ def main():
                              force_matrix.append(force0a)
 
         #Total Force
-
+        totalforcenew = []
         for f in range(0,len(particle)-1):
             #Take 4 elements from list, F01,F02,etc and adds them together.
             g = f*(len(particle)-1)
@@ -311,13 +312,13 @@ def main():
 
 
         #Definining new totalforce
-        totalforcenew=totalforce
+        totalforcenew=0
 
         #Increase in time
         time += dt
 
         # Output particle information
-        pot_matrix = []
+
         for f in range(0,len(particle)-1):
             if particle[f] == None:
                 break
@@ -344,7 +345,7 @@ def main():
 
 
         ###WE NEED to add  ADD forces and potentials here###
-        totalenergy=[]
+
         #Adding energies together
         for f in range(0,len(particle)-1):
             #Take 4 elements from list, E01,E02,etc and adds them together.
@@ -367,7 +368,7 @@ def main():
             else:
                 partpos=Particle3D.__str__(particle[h])
                 partfile.write(partpos + "\n")
-
+        totalforcenew = []
 
         # Append information to data lists
         # Append information to data lists
