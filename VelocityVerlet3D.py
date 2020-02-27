@@ -1,7 +1,7 @@
 """
-Author:Panayiotis Panayiotou and John Waiton
-StudentID:S1715899
-Updated VelocityVerlet
+Author: Panayiotis Panayiotou, John Waiton
+StudentID:s1715899, s1739002
+Project: N-body Simulation of the Solar System
 """
 import sys
 import math
@@ -9,91 +9,168 @@ import numpy as np
 import matplotlib.pyplot as pyplot
 from Particle3D import Particle3D
 
-#ISSUES - LINE 295 ISH THE FORCES ARE CORRECT BUT ARENT APPLIED CORRECTLY TO THE PARTICLE, VELOCITY IS WRONG
 
 #add the Gravitational constant
-#Units used: Astronimical Units(Au), Days, Solar Masses
-G = 0.0295897
+#Units used: km, kg and days
+G = 4.98217402E-10
+#For G, in units km^3/(kg*days^2)
 #create particle format
 
+##files neeeding loaded in, particle positions, velocities & constants (numstep, dt, G)
+##Particle positions taken from 28th February 2020 from NASA
 
-def force_Newton(p1,p2, m1, m2):
+#Create a general function that will be used to calculate both Kinietic energy and potential ENERGY
+def newton(p1, p2, m1, m2):
     """
-    Method to return the force on a particle
-    in a Newtonian potential.
-
-    :param p1 and p2: Particle3D instances
-    :param m1: parameter m1 is the mass of the first object
-    :param m2: parameter m2 is the mass of the seconf object
-    :return: force acting on particle as Numpy array
-    :note this is the Force on p1. To find the force on p2, f1 = -f2 ny Newton's third law
-    """
-    sep_scalar_vec = Particle3D.seperation(p1,p2)
-    sep_scalar= np.linalg.norm(sep_scalar_vec)
-   # force = (2*De*a*(1-math.exp(-a*(sep_scalar-re)))*(math.exp(-a*(sep_scalar-re))))*(sep_scalar_vec)/sep_scalar
-    force = -(G*m1*m2*sep_scalar_vec)/(sep_scalar**3)
-    return force
-
-def pot_energy_Newton(p1, p2, m1):
-    """
-    Method to return potential energy
+    Method to return potential energy and force
     of particle in Newton potential
 
     :param p1 and p2: Particle3D instances
-    :param m1: parameter m1 is the mass of the object under gravitational potential
-    :return: potential energy of particle as float
+    :param m1 and m2: masses of the objects under gravitational potential
+    :return: potential energy of particle as float & force acting on particle as Numpy array
     """
     sep_scalar_vec = Particle3D.seperation(p1,p2)
     sep_scalar= np.linalg.norm(sep_scalar_vec)
-    #potential = De*((1-math.exp(math.pow(-a*(sep_scalar-re),2)))-1)
-    potential = (G*m1)/sep_scalar
-    return potential
+    potential = (G*m1*m2)/sep_scalar
+    force = -(G*m1*m2*sep_scalar_vec)/(sep_scalar**3)
+    return force, potential
 
-#Begin Main code
-#I have changed the whole procedure since we only need one file only. since the masses are essentailly in there. IVe Commented most things after checkup remove
+
+#A function is created to condense the code as this block of code is repeated.
+def baseloop(particle):
+    """
+    Method to process any function across
+    all planets and apply results to matrix
+
+    :param particle: Particle list
+    :return: Matrix of applied force/energy in suitably sized matrix
+    """
+    #example of use, totalF = baseloop(particle,force_Newton)
+    #Initial conditions
+
+    #Creates w lists, each with h elements.
+    #For our use, each list is a particle, each element is a force
+    #to initialise our matrices we use list comprehensions.
+    w, h = (len(particle)),(len(particle)-1);
+    fmatrix=[[0 for x in range(w)] for y in range(h)]
+    pmatrix=[[0 for x in range(w)] for y in range(h)]
+    #begin basic looping system, allows for looping across all planets
+    for f in range(0,len(particle)-1):
+        #No particle, break loop. Failsafe
+        if particle[f] == None:
+            break
+        else:
+             for g in range(0,len(particle)-1):
+                #If we are not testing against ourselves, apply function
+                ##Something to improve upon is make this not double count fncs
+                 if f != g:
+                     if particle[g] == None:
+                         break
+                #To stop us calculating already existent results
+                     if f > g:
+                         fmatrix[f][g], pmatrix[f][g] = -fmatrix[g][f], -pmatrix[g][f]
+                     else:
+                         fmatrix[f][g], pmatrix[f][g] = newton(particle[f].position,particle[g].position, particle[f].mass,particle[g].mass)
+                         #print(f, g)
+                         #print(element)
+
+    ftotal = [sum(x) for x in fmatrix]
+    ptotal = [sum(x) for x in pmatrix]
+    return ftotal, ptotal
+
+
+def apoperi(particle, apo, peri):
+    """
+    Method to update the apo and periapsis of each particle
+    with respect to the sun for all particles except the moon
+    which is with respect to Earth
+
+    :param particle: Particle list
+    :param apo: Existing apoapses list
+    :param peri: Existing periapses list
+    :return: Lists of all particles' updated apo- and periapses
+    """
+    #Loop for all planets except sun
+    for f in range(1,len(particle)-2):
+        #All separations excluding the moon, since moon is placed innthe last positionin the poskms file
+        if f != 4:
+            #Calculate separation
+            sep = np.linalg.norm(Particle3D.seperation(particle[0].position,particle[f].position))
+            #Determine if new apoapsis
+            if apo[f] == None:
+                apo[f] = sep
+            elif (sep > apo[f]):
+                apo[f] = sep
+
+            #Determine if new periapsis
+            #If no periapsis exists
+            if peri[f] == None:
+                peri[f] = sep
+            elif (sep < peri[f]):
+                peri[f] = sep
+        #For the moon, relative to the Earth
+        else:
+            #Calculate separation, assuming Earth is particle 3
+            sep = np.linalg.norm(Particle3D.seperation(particle[3].position,particle[f].position))
+            #Determine if new apoapsis
+            if apo[f] == None:
+                apo[f] = sep
+            elif (sep > apo[f]):
+                apo[f] = sep
+
+            #Determine if new periapsis
+            if peri[f] == None:
+                peri[f] = sep
+            elif (sep < peri[f]):
+                peri[f] = sep
+    return apo, peri
+
+##########################BEGIN MAIN CODE########################################
 def main():
     # Read name of the two input files from command line
-    # Two inputfiles were chosen, one that has information about the particle while the other has information about the interaction
-    if len(sys.argv) != 2:
-        print("Wrong number of arguments.")
-        print("Usage: " + sys.argv[0] +" Another file")
+    # Two inputfiles were chosen, one that has information about the particles
+    # while the other has information about the interaction and the amount of iterations carried.
+    # code written; python3 Velocityverlet.py poskms.txt numsteps.txt
+    ##Need to add vmd.xyz as argument?
+
+    ############### FILE HANDLING #############
+    ##Does this need to be here anymore? Should we adjust this to ask for the right amount of files?
+    if len(sys.argv) != 3:
+        #print("Wrong number of arguments.")
+        #print("Usage: " + sys.argv[0] + sys.argv[1] +" Another file")
         return
     else:
-
+        #Collect input filenames
         inputfile_name1 = sys.argv[1]
-        #inputfile_name2 = sys.argv[2]
+        inputfile_name2 = sys.argv[2]
 
-     #Open output files
+    # Open input files
     positions = open(inputfile_name1, "r")
-    #potentials = open(inputfile_name2, "r")
+    int_param = open(inputfile_name2, "r")
 
-    # Set up simulation parameters.
-    # User input is going to be the timestep dt and the amount of times the simulation will be run
-    dt = float(input("The dt is taken to be: "))
-    #To portray real physics, the user is asked to input the time the procedure is finished, rather than the amount of steps taken.
-    t_end = float(input("Please specify the end time as an integer: "))
-    #The number of steps which are needed in the time integration are shown below
-    numstep = int(t_end/dt)
-    #Initialise time. Note that the natural units given in the question are used. ie timestep is 10.18fs
-    time = 0.0
+    # Collect simulation parameters from 2nd input file
 
-    #file_handle2 =potentials
-    #De, re, g = Particle3D.from_file2(file_handle2)
-    #De = float(De)
-    #g = float(g)
-    #re = float(re)
+    # To portray real physics, the user is asked to input the time the procedure is finished, rather than the amount of steps taken.
+    ##I think ^^^ this comment is no longer true, I've added it as a question to ask on tuesday.
+    file_handle2 = int_param
+    G,dt,time_end = Particle3D.from_file2(file_handle2)
+    #Convert from string to float and int
+    G = float(G)
+    dt = int(dt)
+    time_end = int(time_end)
+    ##this is only included so I dont have to remove numstep, can remove
 
+    ######################PARTICLE CREATION#####################
 
-    #Open another text file and extract information about the positiion of the particle and its velocity and create a Particle3D instance
-    #This happens twice
+    # Initialise particle list
+    particle= []
 
+    # Extract information from file about the positions of the particles and their velocity, create Particle3D instances stored in list
     file_handle1 = positions
     i=1
-    #creates false beginning particle to allow initialisation with values 0 0 0 0 0 0 ...
-    ##Removed the zeros.
-    particle= []
+
     particle.append(Particle3D.from_file1(file_handle1))
-    #create loop to allow formation of each particle with limit of 41 (arbitrary, can be changed easily)
+    #create loop to allow formation of each particle.
     while True:
         particle.append(Particle3D.from_file1(file_handle1))
         #when particle is empty (list reading finished) end while loop
@@ -103,312 +180,182 @@ def main():
     #show particle number and completion
     print("Particle Processing Complete, particles processed: " + str(len(particle)-1))
 
-    # Get initial force
-    #Use the numpy module to create a matrix that will store the values of the force
-    force_matrix = []
+    ##################### VARIABLE INITIALISATION ###########################
 
-    ##FORCE APPLICATION COMPONENT - SHOULD BE FASTER, F12 = -F21 ISNT APPLIED, WORK ON THIS
+    ##This section doesn't include all variable initialisation, but ones that are used in time integration extensively
+    # Initialise time. Note that the natural units given in the question are used.
+    time = 0.0
 
-
-    #Looks in double nested loops for each particle interaction and adds to list the forces
-    for f in range(0,len(particle)-1):
-        if particle[f] == None:
-            break
-        else:
-             for g in range(0,len(particle)-1):
-                 #If we are repeating ourselvforce0a = es (f>g), take earlier values and invert them. Otherwise, continue with calculation
-                 if f>g:
-                     #elem is the 'pattern' created in our matrix to find the inverted value
-                     elem = f+(len(particle)-1)*g-1
-                     force0a = -force_matrix[elem]
-                     print(f, g)
-                     print(force0a)
-                     force_matrix.append(force0a)
-                 elif f != g:
-                     if particle[g] == None:
-                         break
-                     else:
-                         ##Adjusted this code so force_matrix is now a list of [[F12],[F13],[F14]], this wasn't occurring before. Look at line 136
-                         force0a = force_Newton(particle[f].position,particle[g].position, particle[f].mass,particle[g].mass)
-                         ##Repetitive code from lines 120-122 - Could be improved
-                         print(f, g)
-                         print(force0a)
-                         force_matrix.append(force0a)
-
-    ##PRINTING THIS \/ OFF NOW IS REALLY MESSY
-    #print(force_matrix)
-
-
-    #Calculation of the Energy for both particles - Potential energy of Particle 1 on 2, on 3, etc
-    #To do so, we need to utilise the function created.
-    #A matrix of values is created
-    #Files are created for each energies of the particles, and are written into.
-    pot_matrix = []
-    for f in range(0,len(particle)-1):
-        if particle[f] == None:
-            break
-        ##The break function is powerful.
-        else:
-             for g in range(0,len(particle)-1):
-                 #If we are repeating ourselves (f>g), take earlier values and invert them. Otherwise, continue with calculation
-                 if f>g:
-                     #elem is the 'pattern' created in our matrix to find the inverted value
-                     elem = f+(len(particle)-1)*g-1
-                     potential = pot_matrix[elem]
-                     print(f, g)
-                     print(potential)
-                     pot_matrix.append(potential)
-                 elif f != g:
-                     if particle[g] == None:
-                         break
-                     else:
-                         potential = pot_energy_Newton(particle[f].position,particle[g].position, particle[f].mass)
-                         ##Repetitive code. Can create a function.
-                         print(f, g)
-                         print(potential)
-                         pot_matrix.append(potential)
-
-
-    ###WE NEED to add  ADD forces and potentials here###
-    totalenergy=[]
-    #Adding energies together
-    for f in range(0,len(particle)-1):
-        #Take 4 elements from list, E01,E02,etc and adds them together.
-        g = f*(len(particle)-1)
-        totalenergy.append(np.sum(pot_matrix[:(len(particle)-1)]))
-        if particle[f] == None:
-            break
-        else:
-            efile = open("energy"+str(f)+".txt","w")
-            energy = particle[f].kinetic_energy() + totalenergy[f]
-            efile.write(str(energy)+ "\n")
-
-    print("Energy")
-    print(totalenergy)
-
+    # Initial force & energy
+    # Use the numpy module to create a matrix that will store the values of the force
     totalforce=[]
     totalforcenew = []
-    #Adding forces together
-    for f in range(0,len(particle)-1):
-        #Take 4 elements from list, E01,E02,etc and adds them together.
-        g = f*(len(particle)-1)
-        totalforce.append(np.sum(force_matrix[:(len(particle)-1)]))
-    ###The following code results in 4 extra files. Resolution same as above
-    print("Forces")
-    print(totalforce)
-    #To create the energy file we need the potential energies of the particle.  Potiential energy should be positive
+    totalenergy = []
 
-    ##First Attempt - TOTAL ENERGY OF PARTICLE 1, 2, 3, 4, 5
-    #for f in range(0,len(particle)-1):
-    #    if particle[f] == None:
-    #        break
-    #    else:
-    #        efile = open("energy"+str(f)+".txt","w")
-    #        energy = particle[f].kinetic_energy() + totalenergy[f]
-    #        efile.write(str(energy)+ "\n")
+    # Initialise data lists for plotting later
+    # Lists that will contain the time evolution of the position of both particles and their seperation as well as their energy will be taken
+    # Since the position of particles is a numpy array, we need to find their norm so we can plot it
+    time_list = [time]
 
-    #A file for dtoring the seperation of the two particles is being created and the values are being written into it
-    ##My idea FOR this part of the Code:: for each particle inetraction one file is created ie we should get in our case 16 files. That means it should implement both techniques used above
-    ##REMEMBER TO REMOVE - ITERATIVE
-    sep = []
+    #Labelling each particle
+    ##Should be based on poskms or some other file. Kind of hard-code-y but useful right now.
+    plabel = []                                 #Particle No.           #Read in from position file as
+    plabel.append("Sol")                        #particle 0             1
+    plabel.append("Mercury")                    #particle 1             2
+    plabel.append("Venus")                      #particle 2             3
+    plabel.append("Earth")                      #particle 3             4
+    plabel.append("Moon")                       #particle 4             5
+    plabel.append("Mars")                       #particle 5             6
+    plabel.append("Jupiter")                    #particle 6             7
+    plabel.append("Saturn")                     #particle 7             8
+    plabel.append("Uranus")                     #particle 8             9
+    plabel.append("Neptune")                    #particle 9             10
+    plabel.append("Pluto")                      #particle 10            11
+    plabel.append("Halley's Comet")             #particle 11            12
+
+
+    #Calculate initial total force & total potential energy
+    totalforce, potenergy = baseloop(particle)
+    #print("Total Forces")
+    #print(totalforce)
+    #print("Total Energy")
+    #print(potenergy)
+
+
+
+    #####################WRITING TO FILES#####################
+    #Open Files
+    efile = open("energy.txt","w")
+    partfile = open("vmd"+".xyz","w")
+
+    #Write total energy to Files
+    #Resetting energy value
+    energy = []
+    #Write break section of particle
+    partfile.write(str(len(particle)-1)+"\n"+"break \n")
+    #Create loop for each particle
     for f in range(0,len(particle)-1):
         if particle[f] == None:
             break
         else:
-             for g in range(0,len(particle)-1):
-                 #If we are repeating ourselves (f>g), take earlier values and invert them. Otherwise, continue with calculation
-                 if particle[g] == None:
-                     break
-                 elif (f!=g and f<g):
-                     sepfile = open("sep"+str(f)+str(g)+".txt","w")
-                     sep = np.linalg.norm(Particle3D.seperation(particle[f].position,particle[g].position))
-                     sepfile.write(str(sep)+ "\n")
-    # Initialise data lists for plotting later
-    #Lists that will contain the time evolution of the position of both particles and their seperation as well as their energy will be taken
-    #Since the position of particles is a numpy array, we need to find their norm so we can plot it
-
-    #Initialise VMD file creation
-    partfile = open("vmd"+".xyz","w")
-    partfile.write(str(len(particle)-1)+"\n"+"break \n")
-    #Write each initial position of each particle to the file
-    for i in range(0,len(particle)-1):
-        if particle[i] == None:
-            break
-        else:
-            partpos=Particle3D.__str__(particle[i])
+            #Collect each planets energy in list
+            energy.append(particle[f].kinetic_energy() + potenergy[f])
+            #Write VMD file component
+            partpos=Particle3D.__str__(particle[f])
             partfile.write(partpos + "\n")
+    #Find total energy of system and apply to list & file
+    totalenergy.append(sum(energy))
+    efile.write(str(sum(energy))+ "\n")
 
 
-    time_list = [time]
-    sep_list = [sep]
-    energy_list = [energy]
+    ###############APO AND PERIAPSES CODE##################
+    #Initialise apo and periapsis lists of required length
+    apo = [None] * (len(particle)-2)
+    peri = [None] * (len(particle)-2)
+    #Initiate calculation of initial apo and periapses
+    apo, peri = apoperi(particle, apo, peri)
 
-    #Write initial positions to file
+    ###################TIME PERIOD CODE########################
+    #IDEA: Take the initial position of each object. Take cross product with new position and measure the times we have a change of sign.
+    p_const_initial = [[particle[i].position] for i in range(0,len(particle)-1)]
+    print(p_const_initial)
 
-    #Start the integration loop
-    for i in range(numstep):
-        #Update the particle position in a loop.
+    #################TIME INTEGRATION LOOP BEGINS#################
+    for i in range(0,time_end,dt):
+
+        # Determine new position of each particle
         for f in range(0,len(particle)-1):
             if particle[f] == None:
                 break
             else:
                 particle[f].step_pos2nd(dt,totalforce[f])
 
-        #Updates Seperation & writes it to file
+        #########APO AND PERIAPSES CODE#########
+        apo, peri = apoperi(particle, apo, peri)
+
+        #########TIME PERIOD CODE######
+        counter = np.zeros((len(particle)-1))
+        add_matrix = np.ones((len(particle)-1))/2
+        print(counter)
+        print(add_matrix)
+        for c in range(0,len(particle)-1):
+            if (np.cross(p_const_initial[c],particle[c].position)).any() <= 0:
+                counter[i] =1
+                p_const_initial[c] = -p_const_initial[c]
+
+
+        ######NEW FORCE AND ENERGY CALCULATION#####
+        totalforcenew, potenergy = baseloop(particle)
+
+        #Sets how often the progress is shown to the user, can be edited to suit the user.
+        if i % 1000 == 0:
+            print("Step" + str(i))
+
+        # Determine velocity of each particle
         for f in range(0,len(particle)-1):
             if particle[f] == None:
                 break
             else:
-                 for g in range(0,len(particle)-1):
-                     #If we are repeating ourselves (f>g), take earlier values and invert them. Otherwise, continue with calculation
-                     if particle[g] == None:
-                         break
-                     elif (f!=g and f<g):
-                         sep = np.linalg.norm(Particle3D.seperation(particle[f].position,particle[g].position))
-                         sepfile.write(str(sep)+ "\n")
-
-        #Update Force
-        #Wipe force matrix to be redefined
-        force_matrix=[]
-        for f in range(0,len(particle)-1):
-            if particle[f] == None:
-                break
-            else:
-                 for g in range(0,len(particle)-1):
-                     #If we are repeating ourselves (f>g), take earlier values and invert them. Otherwise, continue with calculation
-                     if f>g:
-                         #elem is the 'pattern' created in our matrix to find the inverted value
-                         elem = f+(len(particle)-1)*g-1
-                         force0a = -force_matrix[elem]
-                         print(f, g)
-                         print(force0a)
-                         force_matrix.append(force0a)
-                     elif f != g:
-                         if particle[g] == None:
-                             break
-                         else:
-                             ##Adjusted this code so force_matrix is now a list of [[F12],[F13],[F14]], this wasn't occurring before. Look at line 136
-                             force0a = force_Newton(particle[f].position,particle[g].position, particle[f].mass,particle[g].mass)
-                             ##Repetitive code from lines 120-122 - Could be improved
-                             print(f, g)
-                             print(force0a)
-                             force_matrix.append(force0a)
-
-        #Total Force
-        totalforcenew = []
-        for f in range(0,len(particle)-1):
-            #Take 4 elements from list, F01,F02,etc and adds them together.
-            g = f*(len(particle)-1)
-            totalforcenew.append(np.sum(force_matrix[:(len(particle)-1)])) #THIS IS WRONG
-
-
-
-        # current and new forces
-        for f in range(0,len(particle)-1):
-            if particle[f] == None:
-                break
-            else:
-                particle[f].step_velocity(dt,(totalforce[f]+totalforcenew[f])) #0.5
+                particle[f].step_velocity(dt,0.5*(totalforce[f]+totalforcenew[f])) #0.5
 
 
         #Definining new totalforce
-        totalforcenew=0
+        totalforce = totalforcenew
 
         #Increase in time
         time += dt
 
-        # Output particle information
-
-        for f in range(0,len(particle)-1):
-            if particle[f] == None:
-                break
-            ##The break function is powerful.
-            else:
-                 for g in range(0,len(particle)-1):
-                     #If we are repeating ourselves (f>g), take earlier values and invert them. Otherwise, continue with calculation
-                     if f>g:
-                         #elem is the 'pattern' created in our matrix to find the inverted value
-                         elem = f+(len(particle)-1)*g-1
-                         potential = pot_matrix[elem]
-                         print(f, g)
-                         print(potential)
-                         pot_matrix.append(potential)
-                     elif f != g:
-                         if particle[g] == None:
-                             break
-                         else:
-                             potential = pot_energy_Newton(particle[f].position,particle[g].position, particle[f].mass)
-                             ##Repetitive code. Can create a function.
-                             print(f, g)
-                             print(potential)
-                             pot_matrix.append(potential)
-
-
-        ###WE NEED to add  ADD forces and potentials here###
-
-        #Adding energies together
-        for f in range(0,len(particle)-1):
-            #Take 4 elements from list, E01,E02,etc and adds them together.
-            g = f*(len(particle)-1)
-            totalenergy.append(np.sum(pot_matrix[:(len(particle)-1)]))
-            if particle[f] == None:
-                break
-            else:
-                energy = particle[f].kinetic_energy() + totalenergy[f]
-                efile.write(str(energy)+ "\n")
-
-
-
-        #Write positions to VMD file
+        #####################WRITING TO FILES#####################
+        ##This component identical to earlier section, somehow make this into a function of some sort? Ask on tuesday
+        #Write total energy to Files
+        #Resetting energy value
+        energy = []
         partfile.write(str(len(particle)-1)+"\n"+"break \n")
-        #Write each initial position of each particle to the file
-        for h in range(0,len(particle)-1):
-            if particle[h] == None:
+        for f in range(0,len(particle)-1):
+            if particle[f] == None:
                 break
             else:
-                partpos=Particle3D.__str__(particle[h])
+                #Write energy of each planet
+                energy.append(particle[f].kinetic_energy() + potenergy[f])
+                #Write VMD file component
+                partpos=Particle3D.__str__(particle[f])
                 partfile.write(partpos + "\n")
-        totalforcenew = []
+        #Find total energy of system and apply to list & file
+        totalenergy.append(sum(energy))
+        efile.write(str(sum(energy))+ "\n")
 
-        # Append information to data lists
+
+
         # Append information to data lists
         time_list.append(time)
-        sep_list.append(sep)
-        energy_list.append(energy)
+        #sep_list.append(sep)
 
-
+    ########################TIME INTEGRATION LOOP ENDS############################
 
     # Post-simulation:
-    # Close output file
+    # Close energy and vmd output files
     efile.close()
-    sepfile.close()
     partfile.close()
 
-    # Plot particle trajectory to screen
-    #Plotting in one graph, the positions of the particles as well as their seperation
-    # The behaviour of the 2 positions should oscillate, as well as their seperation but this is of smaller order that the scales of the graph
-    #To avoid this straight line the seperation of the particles has been plotted again
-    pyplot.title('Velocity Verlet integrator: position of Particles vs time')
-    pyplot.xlabel('Time/10.18 fs')
-    pyplot.ylabel('Position/Angstroms')
-    pyplot.plot(time_list, pos1_list,'r',label = "Particle1 Position")
-    pyplot.plot(time_list, pos2_list,'b',label = "Particle2 Position")
+    print(counter)
+    #Write apo and periapses to files
+    apfile = open("apoperifile.txt", "w")
+    #creates loop to make readable while skipping repetition
+    for f in range(0,len(particle)-2):
+        apfile.write("=============================== \n")
+        apfile.write("Particle " + str(particle[f].label) + " - " + str(plabel[f]) + (" \n"))
+        apfile.write("Apoapsis - " + str(apo[f]) + " \n" + "Periapsis - " + str(peri[f]) + " \n")
+    apfile.write("=============================== \n")
 
-    pyplot.legend(loc = "best")
-    pyplot.show()
+    #close file
+    apfile.close()
 
-    # Plot particle energy to screen
+
+    # Plot Total Energy of the system.
     pyplot.title('Velocity Verlet integrator: total energy vs time')
-    pyplot.xlabel('Time/10.18 fs')
-    pyplot.ylabel('Energy/eV')
-    pyplot.plot(time_list, energy_list,'r', label ="Particle1 Energy" )
-    pyplot.legend(loc = "best")
-    pyplot.show()
-
-    pyplot.title('Velocity Verlet integrator: Seperation of Particles vs time')
-    pyplot.xlabel('Time/10.18 fs')
-    pyplot.ylabel('Seperation/Angstroms')
-    pyplot.plot(time_list, sep_list,'g', label = "Seperation between the Particles")
+    pyplot.xlabel('Time/Days')
+    pyplot.ylabel('Energy/1.3996E-4 Joules')
+    pyplot.plot(time_list, totalenergy,'r', label ="Total Energy" )
     pyplot.legend(loc = "best")
     pyplot.show()
 
