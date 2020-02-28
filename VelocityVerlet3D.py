@@ -257,12 +257,12 @@ def main():
     apo, peri = apoperi(particle, apo, peri)
 
     ###################TIME PERIOD CODE########################
-    #IDEA: Take the initial position of each object. Take cross product with new position and measure the times we have a change of sign.
+    #IDEA: Take the initial position of each object. Take dot product with new position and measure the times we have a change of sign.
     p_const_initial = []
     counter = np.zeros((len(particle)-1))
     for i in range(0,len(particle)-1):
          p_const_initial.append(Particle3D.seperation(particle[0].position,particle[i].position))
-    print(p_const_initial)
+
     #################TIME INTEGRATION LOOP BEGINS#################
     for i in range(0,time_end,dt):
 
@@ -334,15 +334,15 @@ def main():
     ########################TIME INTEGRATION LOOP ENDS############################
 
     # Post-simulation:
-    #Make a correction on the value of the counter.
+    #Make a time correction on the value of the counter.
     for c in range(1,len(particle)-1):
-        counter[c] = counter[c] + (np.dot(p_const_initial[c],Particle3D.seperation(particle[0].position,particle[c].position))/(np.linalg.norm(p_const_initial[c])*np.linalg.norm(Particle3D.seperation(particle[0].position,particle[c].position))))
-        
+        counter[c] = counter[c] + (np.dot(p_const_initial[c],Particle3D.seperation(particle[0].position,particle[c].position))/(np.linalg.norm(p_const_initial[c])*np.linalg.norm(Particle3D.seperation(particle[0].position,particle[c].position))))/(math.pi)
+    #Find the Time period of each object based on 365 days.
+        counter[c] = (time_end/100)/counter[c]
     # Close energy and vmd output files
     efile.close()
     partfile.close()
 
-    print(counter)
     #Write apo and periapses to files
     apfile = open("apoperifile.txt", "w")
     #creates loop to make readable while skipping repetition
@@ -355,6 +355,14 @@ def main():
     #close file
     apfile.close()
 
+    periodfile = open("time_periodfile.txt", "w")
+    #creates loop to make readable while skipping repetition
+    for f in range(0,len(particle)-1):
+        periodfile.write("=============================== \n")
+        periodfile.write("Particle " + str(particle[f].label) + " - " + str(plabel[f]) + (" \n"))
+        periodfile.write("Time Period - " + str(counter[f]) + "Earth years" + " \n")
+        periodfile.write("=============================== \n")
+    periodfile.close()
 
     # Plot Total Energy of the system.
     pyplot.title('Velocity Verlet integrator: total energy vs time')
