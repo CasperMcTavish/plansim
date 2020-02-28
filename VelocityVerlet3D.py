@@ -261,7 +261,7 @@ def main():
     p_const_initial = []
     counter = np.zeros((len(particle)-1))
     for i in range(0,len(particle)-1):
-         p_const_initial.append(particle[i].position)
+         p_const_initial.append(Particle3D.seperation(particle[0].position,particle[i].position))
     print(p_const_initial)
     #################TIME INTEGRATION LOOP BEGINS#################
     for i in range(0,time_end,dt):
@@ -272,16 +272,16 @@ def main():
                 break
             else:
                 particle[f].step_pos2nd(dt,totalforce[f])
-                
+
         #########APO AND PERIAPSES CODE#########
         apo, peri = apoperi(particle, apo, peri)
 
         #########TIME PERIOD CODE######
         for c in range(1,len(particle)-1):
-            cross_prod = np.cross(p_const_initial[c],particle[c].position) #this result to zero
-            print(cross_prod)
-            if cross_prod.any() < np.zeros(3).any():
-                counter[c] = counter[c]+1
+            dot_prod = np.dot(p_const_initial[c],Particle3D.seperation(particle[0].position,particle[c].position)) #this results to zero
+            value = dot_prod/(np.linalg.norm(p_const_initial[c])*np.linalg.norm(Particle3D.seperation(particle[0].position,particle[c].position)))
+            if value <= 0 and particle[c] != particle[0]:
+                counter[c] = counter[c]+0.5 # Because the sign will change about 2 times
                 p_const_initial[c] = -p_const_initial[c]
 
 
@@ -334,6 +334,10 @@ def main():
     ########################TIME INTEGRATION LOOP ENDS############################
 
     # Post-simulation:
+    #Make a correction on the value of the counter.
+    for c in range(1,len(particle)-1):
+        counter[c] = counter[c] + (np.dot(p_const_initial[c],Particle3D.seperation(particle[0].position,particle[c].position))/(np.linalg.norm(p_const_initial[c])*np.linalg.norm(Particle3D.seperation(particle[0].position,particle[c].position))))
+        
     # Close energy and vmd output files
     efile.close()
     partfile.close()
