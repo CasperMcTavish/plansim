@@ -1,48 +1,48 @@
 =============================== 
 Particle 1.0 - Sol 
-Time Period - 0.0Earth years 
+Time Period - 0.0 Earth years 
 =============================== 
 =============================== 
 Particle 2.0 - Mercury 
-Time Period - 0.9050133555477025Earth years 
+Time Period - 0.2413505019294779 Earth years 
 =============================== 
 =============================== 
 Particle 3.0 - Venus 
-Time Period - 2.2505736863697203Earth years 
+Time Period - 0.6155927617114831 Earth years 
 =============================== 
 =============================== 
 Particle 4.0 - Earth 
-Time Period - 3.6450517732162826Earth years 
+Time Period - 1.001265335313858 Earth years 
 =============================== 
 =============================== 
 Particle 5.0 - Moon 
-Time Period - 3.6450073893497263Earth years 
+Time Period - 0.07608027723318604 Earth years 
 =============================== 
 =============================== 
 Particle 6.0 - Mars 
-Time Period - 6.862529547256943Earth years 
+Time Period - 1.881623158438873 Earth years 
 =============================== 
 =============================== 
 Particle 7.0 - Jupiter 
-Time Period - 41.43728218616272Earth years 
+Time Period - 11.87214611872146 Earth years 
 =============================== 
 =============================== 
 Particle 8.0 - Saturn 
-Time Period - 97.20835106078775Earth years 
+Time Period - 29.331184528605963 Earth years 
 =============================== 
 =============================== 
 Particle 9.0 - Uranus 
-Time Period - 325.2854930238126Earth years 
+Time Period - 83.10502283105022 Earth years 
 =============================== 
 =============================== 
 Particle 10.0 - Neptune 
-Time Period - 489.70404576962324Earth years 
+Time Period - 166.21004566210044 Earth years 
 =============================== 
 =============================== 
 Particle 11.0 - Pluto 
-Time Period - 564.8451314399844Earth years 
+Time Period - 249.31506849315068 Earth years 
 =============================== 
 =============================== 
 Particle 12.0 - Halley's Comet 
-Time Period - 277.8217009446947Earth years 
+Time Period - 83.10502283105022 Earth years 
 =============================== 

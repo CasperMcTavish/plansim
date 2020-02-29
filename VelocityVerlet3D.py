@@ -127,10 +127,10 @@ G = 4.98217402E-10
 #    return apo, peri
 #
 #def dot_prod(a,b):
-#    dot_prod = np.dot(a,b) 
+#    dot_prod = np.dot(a,b)
 #    value = dot_prod/(np.linalg.norm(a)*np.linalg.norm(b))
 #    return value
-#    
+#
 
 ##########################BEGIN MAIN CODE########################################
 def main():
@@ -263,10 +263,10 @@ def main():
     apo, peri = functions.apoperi(particle, apo, peri)
 
     ###################TIME PERIOD CODE########################
-    #IDEA: Take the initial seperation from the sun of each object. 
+    #IDEA: Take the initial seperation from the sun of each object.
     #Take dot product with new seperation from the sun and measure the times we have a change of sign.
     p_const_initial = []
-    #Initialise counter 
+    #Initialise counter
     counter = np.zeros((len(particle)-1))
     for i in range(0,len(particle)-1):
          p_const_initial.append(Particle3D.seperation(particle[0].position,particle[i].position))
@@ -286,9 +286,16 @@ def main():
 
         #########TIME PERIOD CODE######
         for c in range(1,len(particle)-1):
-            if functions.dot_prod(p_const_initial[c],Particle3D.seperation(particle[0].position,particle[c].position)) <= 0 and particle[c] != particle[0]:
-                counter[c] = counter[c]+0.5 # Because the sign will change about 2 times per rotation
-                p_const_initial[c] = -p_const_initial[c]
+            #Everything relative to Sun
+            if c != 4:
+                if functions.dot_prod(p_const_initial[c],Particle3D.seperation(particle[0].position,particle[c].position)) <= 0 and particle[c] != particle[0]:
+                    counter[c] = counter[c]+0.5 # Because the sign will change about 2 times per rotation
+                    p_const_initial[c] = -p_const_initial[c]
+            #Moon relative to Earth
+            else:
+                if functions.dot_prod(p_const_initial[c],Particle3D.seperation(particle[3].position,particle[c].position)) <= 0 and particle[c] != particle[0]:
+                    counter[c] = counter[c]+0.5 # Because the sign will change about 2 times per rotation
+                    p_const_initial[c] = -p_const_initial[c]
 
 
         ######NEW FORCE AND ENERGY CALCULATION#####
@@ -296,7 +303,7 @@ def main():
 
         #Sets how often the progress is shown to the user, can be edited to suit the user.
         if i % 1000 == 0:
-            print("Step" + str(i))
+            print("Step " + str(i) + "/" + str(time_end))
 
         # Determine velocity of each particle
         for f in range(0,len(particle)-1):
@@ -341,11 +348,11 @@ def main():
 
     # Post-simulation:
     #Make a time correction on the value of the counter.
-    #The angle of the last position of the simulation with initial position of each object is duvuded by the maximum angle attained by our counter system(pi)
+    #The angle of the last position of the simulation with initial position of each object is divided by the maximum angle attained by our counter system(pi)
     #Gives a first order correction to our method
     for c in range(1,len(particle)-1):
-        counter[c] = counter[c] + (np.dot(p_const_initial[c],Particle3D.seperation(particle[0].position,particle[c].position))/(np.linalg.norm(p_const_initial[c])*np.linalg.norm(Particle3D.seperation(particle[0].position,particle[c].position))))/(math.pi)
-    #Find the Time period of each object based on Earfh years.
+        #counter[c] = counter[c] + (np.dot(p_const_initial[c],Particle3D.seperation(particle[0].position,particle[c].position))/(np.linalg.norm(p_const_initial[c])*np.linalg.norm(Particle3D.seperation(particle[0].position,particle[c].position))))/(math.pi)
+    #Find the Time period of each object based on Earth years.
         counter[c] = (time_end/365)/counter[c]
     # Close energy and vmd output files
     efile.close()
@@ -363,6 +370,7 @@ def main():
     #close file
     apfile.close()
 
+    #Write period to files
     periodfile = open("time_periodfile.txt", "w")
     for f in range(0,len(particle)-1):
         periodfile.write("=============================== \n")
