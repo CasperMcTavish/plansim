@@ -8,7 +8,7 @@ import math
 import numpy as np
 import matplotlib.pyplot as pyplot
 from Particle3D import Particle3D
-
+import functions
 
 #add the Gravitational constant
 #Units used: km, kg and days
@@ -20,111 +20,117 @@ G = 4.98217402E-10
 ##Particle positions taken from 28th February 2020 from NASA
 
 #Create a general function that will be used to calculate both Kinetic energy and potential energy
-def newton(p1, p2, m1, m2):
-    """
-    Method to return potential energy and force
-    of particle in Newton potential
-
-    :param p1 and p2: Particle3D instances
-    :param m1 and m2: masses of the objects under gravitational potential
-    :return: potential energy of particle as float & force acting on particle as Numpy array
-    """
-    sep_scalar_vec = Particle3D.seperation(p1,p2)
-    sep_scalar= np.linalg.norm(sep_scalar_vec)
-    potential = (G*m1*m2)/sep_scalar
-    force = -(G*m1*m2*sep_scalar_vec)/(sep_scalar**3)
-    return force, potential
-
-
-#A function is created to condense the code as this block of code is repeated throughout.
-def baseloop(particle):
-    """
-    Method to process any function across
-    all planets and apply results to matrix
-
-    :param particle: Particle list
-    :return: Matrix of applied force/energy in suitably sized matrix
-    """
-    #example of use: totalF = baseloop(particle,force_Newton)
-    #Initial conditions
-
-    #Creates w lists, each with h elements. Effectively,creating a list of lists
-    #For our use, each list is a particle, each element is a force
-    #to initialise our matrices we use list comprehensions.
-    w, h = (len(particle)),(len(particle)-1);
-    #fmatrix will hold the forces, pmatrix holds the potentials.
-    fmatrix=[[0 for x in range(w)] for y in range(h)]
-    pmatrix=[[0 for x in range(w)] for y in range(h)]
-    #begin basic looping system, allows for looping across all planets
-    for f in range(0,len(particle)-1):
-        #No particle, break loop. Failsafe
-        if particle[f] == None:
-            break
-        else:
-             for g in range(0,len(particle)-1):
-                #If we are not testing against ourselves, apply function
-                ##Something to improve upon is make this not double count fncs
-                 if f != g:
-                     if particle[g] == None:
-                         break
-                #To stop us calculating already existent results
-                     if f > g:
-                         fmatrix[f][g], pmatrix[f][g] = -fmatrix[g][f], -pmatrix[g][f]
-                     else:
-                         fmatrix[f][g], pmatrix[f][g] = newton(particle[f].position,particle[g].position, particle[f].mass,particle[g].mass)
-                         #print(f, g)
-                         #print(element)
-
-    ftotal = [sum(x) for x in fmatrix]
-    ptotal = [sum(x) for x in pmatrix]
-    return ftotal, ptotal
-
-
-def apoperi(particle, apo, peri):
-    """
-    Method to update the apo and periapsis of each particle
-    with respect to the sun for all particles except the moon
-    which is with respect to Earth
-
-    :param particle: Particle list
-    :param apo: Existing apoapses list
-    :param peri: Existing periapses list
-    :return: Lists of all particles' updated apo- and periapses
-    """
-    #Loop for all planets except sun
-    for f in range(1,len(particle)-2):
-        #All separations excluding the moon. Special consideration for the moon.
-        if f != 4:
-            #Calculate separation
-            sep = np.linalg.norm(Particle3D.seperation(particle[0].position,particle[f].position))
-            #Determine if new apoapsis
-            if apo[f] == None:
-                apo[f] = sep
-            elif (sep > apo[f]):
-                apo[f] = sep
-
-            #Determine if new periapsis
-            #If no periapsis exists
-            if peri[f] == None:
-                peri[f] = sep
-            elif (sep < peri[f]):
-                peri[f] = sep
-        #For the moon, relative to the Earth
-        else:
-            #Calculate separation, assuming Earth is particle 3
-            sep = np.linalg.norm(Particle3D.seperation(particle[3].position,particle[f].position))
-            #Determine if new apoapsis
-            if apo[f] == None:
-                apo[f] = sep
-            elif (sep > apo[f]):
-                apo[f] = sep
-
-            #Determine if new periapsis
-            if peri[f] == None:
-                peri[f] = sep
-            elif (sep < peri[f]):
-                peri[f] = sep
-    return apo, peri
+#def newton(p1, p2, m1, m2):
+#    """
+#    Method to return potential energy and force
+#    of particle in Newton potential
+#
+#    :param p1 and p2: Particle3D instances
+#    :param m1 and m2: masses of the objects under gravitational potential
+#    :return: potential energy of particle as float & force acting on particle as Numpy array
+#    """
+#    sep_scalar_vec = Particle3D.seperation(p1,p2)
+#    sep_scalar= np.linalg.norm(sep_scalar_vec)
+#    potential = (G*m1*m2)/sep_scalar
+#    force = -(G*m1*m2*sep_scalar_vec)/(sep_scalar**3)
+#    return force, potential
+#
+#
+##A function is created to condense the code as this block of code is repeated throughout.
+#def baseloop(particle):
+#    """
+#    Method to process any function across
+#    all planets and apply results to matrix
+#
+#    :param particle: Particle list
+#    :return: Matrix of applied force/energy in suitably sized matrix
+#    """
+#    #example of use: totalF = baseloop(particle,force_Newton)
+#    #Initial conditions
+#
+#    #Creates w lists, each with h elements. Effectively,creating a list of lists
+#    #For our use, each list is a particle, each element is a force
+#    #to initialise our matrices we use list comprehensions.
+#    w, h = (len(particle)),(len(particle)-1);
+#    #fmatrix will hold the forces, pmatrix holds the potentials.
+#    fmatrix=[[0 for x in range(w)] for y in range(h)]
+#    pmatrix=[[0 for x in range(w)] for y in range(h)]
+#    #begin basic looping system, allows for looping across all planets
+#    for f in range(0,len(particle)-1):
+#        #No particle, break loop. Failsafe
+#        if particle[f] == None:
+#            break
+#        else:
+#             for g in range(0,len(particle)-1):
+#                #If we are not testing against ourselves, apply function
+#                ##Something to improve upon is make this not double count fncs
+#                 if f != g:
+#                     if particle[g] == None:
+#                         break
+#                #To stop us calculating already existent results
+#                     if f > g:
+#                         fmatrix[f][g], pmatrix[f][g] = -fmatrix[g][f], -pmatrix[g][f]
+#                     else:
+#                         fmatrix[f][g], pmatrix[f][g] = newton(particle[f].position,particle[g].position, particle[f].mass,particle[g].mass)
+#                         #print(f, g)
+#                         #print(element)
+#
+#    ftotal = [sum(x) for x in fmatrix]
+#    ptotal = [sum(x) for x in pmatrix]
+#    return ftotal, ptotal
+#
+#
+#def apoperi(particle, apo, peri):
+#    """
+#    Method to update the apo and periapsis of each particle
+#    with respect to the sun for all particles except the moon
+#    which is with respect to Earth
+#
+#    :param particle: Particle list
+#    :param apo: Existing apoapses list
+#    :param peri: Existing periapses list
+#    :return: Lists of all particles' updated apo- and periapses
+#    """
+#    #Loop for all planets except sun
+#    for f in range(1,len(particle)-2):
+#        #All separations excluding the moon. Special consideration for the moon.
+#        if f != 4:
+#            #Calculate separation
+#            sep = np.linalg.norm(Particle3D.seperation(particle[0].position,particle[f].position))
+#            #Determine if new apoapsis
+#            if apo[f] == None:
+#                apo[f] = sep
+#            elif (sep > apo[f]):
+#                apo[f] = sep
+#
+#            #Determine if new periapsis
+#            #If no periapsis exists
+#            if peri[f] == None:
+#                peri[f] = sep
+#            elif (sep < peri[f]):
+#                peri[f] = sep
+#        #For the moon, relative to the Earth
+#        else:
+#            #Calculate separation, assuming Earth is particle 3
+#            sep = np.linalg.norm(Particle3D.seperation(particle[3].position,particle[f].position))
+#            #Determine if new apoapsis
+#            if apo[f] == None:
+#                apo[f] = sep
+#            elif (sep > apo[f]):
+#                apo[f] = sep
+#
+#            #Determine if new periapsis
+#            if peri[f] == None:
+#                peri[f] = sep
+#            elif (sep < peri[f]):
+#                peri[f] = sep
+#    return apo, peri
+#
+#def dot_prod(a,b):
+#    dot_prod = np.dot(a,b) 
+#    value = dot_prod/(np.linalg.norm(a)*np.linalg.norm(b))
+#    return value
+#    
 
 ##########################BEGIN MAIN CODE########################################
 def main():
@@ -216,7 +222,7 @@ def main():
 
 
     #Calculate initial total force & total potential energy
-    totalforce, potenergy = baseloop(particle)
+    totalforce, potenergy = functions.baseloop(particle)
     #print("Total Forces")
     #print(totalforce)
     #print("Total Energy")
@@ -254,11 +260,13 @@ def main():
     apo = [None] * (len(particle)-2)
     peri = [None] * (len(particle)-2)
     #Initiate calculation of initial apo and periapses
-    apo, peri = apoperi(particle, apo, peri)
+    apo, peri = functions.apoperi(particle, apo, peri)
 
     ###################TIME PERIOD CODE########################
-    #IDEA: Take the initial position of each object. Take dot product with new position and measure the times we have a change of sign.
+    #IDEA: Take the initial seperation from the sun of each object. 
+    #Take dot product with new seperation from the sun and measure the times we have a change of sign.
     p_const_initial = []
+    #Initialise counter 
     counter = np.zeros((len(particle)-1))
     for i in range(0,len(particle)-1):
          p_const_initial.append(Particle3D.seperation(particle[0].position,particle[i].position))
@@ -274,19 +282,17 @@ def main():
                 particle[f].step_pos2nd(dt,totalforce[f])
 
         #########APO AND PERIAPSES CODE#########
-        apo, peri = apoperi(particle, apo, peri)
+        apo, peri = functions.apoperi(particle, apo, peri)
 
         #########TIME PERIOD CODE######
         for c in range(1,len(particle)-1):
-            dot_prod = np.dot(p_const_initial[c],Particle3D.seperation(particle[0].position,particle[c].position)) #this results to zero
-            value = dot_prod/(np.linalg.norm(p_const_initial[c])*np.linalg.norm(Particle3D.seperation(particle[0].position,particle[c].position)))
-            if value <= 0 and particle[c] != particle[0]:
-                counter[c] = counter[c]+0.5 # Because the sign will change about 2 times
+            if functions.dot_prod(p_const_initial[c],Particle3D.seperation(particle[0].position,particle[c].position)) <= 0 and particle[c] != particle[0]:
+                counter[c] = counter[c]+0.5 # Because the sign will change about 2 times per rotation
                 p_const_initial[c] = -p_const_initial[c]
 
 
         ######NEW FORCE AND ENERGY CALCULATION#####
-        totalforcenew, potenergy = baseloop(particle)
+        totalforcenew, potenergy = functions.baseloop(particle)
 
         #Sets how often the progress is shown to the user, can be edited to suit the user.
         if i % 1000 == 0:
@@ -335,10 +341,12 @@ def main():
 
     # Post-simulation:
     #Make a time correction on the value of the counter.
+    #The angle of the last position of the simulation with initial position of each object is duvuded by the maximum angle attained by our counter system(pi)
+    #Gives a first order correction to our method
     for c in range(1,len(particle)-1):
         counter[c] = counter[c] + (np.dot(p_const_initial[c],Particle3D.seperation(particle[0].position,particle[c].position))/(np.linalg.norm(p_const_initial[c])*np.linalg.norm(Particle3D.seperation(particle[0].position,particle[c].position))))/(math.pi)
-    #Find the Time period of each object based on 365 days.
-        counter[c] = (time_end/100)/counter[c]
+    #Find the Time period of each object based on Earfh years.
+        counter[c] = (time_end/365)/counter[c]
     # Close energy and vmd output files
     efile.close()
     partfile.close()
@@ -356,11 +364,10 @@ def main():
     apfile.close()
 
     periodfile = open("time_periodfile.txt", "w")
-    #creates loop to make readable while skipping repetition
     for f in range(0,len(particle)-1):
         periodfile.write("=============================== \n")
         periodfile.write("Particle " + str(particle[f].label) + " - " + str(plabel[f]) + (" \n"))
-        periodfile.write("Time Period - " + str(counter[f]) + "Earth years" + " \n")
+        periodfile.write("Time Period - " + str(counter[f]) +" "+ "Earth years" + " \n")
         periodfile.write("=============================== \n")
     periodfile.close()
 
