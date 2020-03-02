@@ -124,7 +124,6 @@ class Particle3D(object):
         tokens = line.split(" ")
         #creates particle unless list is finished (due to 42 being reached in list)
         if  str(tokens[0]) != "END":
-            print(tokens[0] + tokens[1] + tokens[2] + tokens[3])
             pos = np.array([float(tokens[2]),float(tokens[3]),float(tokens[4])])
             vel = np.array([float(tokens[5]),float(tokens[6]),float(tokens[7])])
             #returns Particle
