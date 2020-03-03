@@ -30,7 +30,7 @@ def newton(p1, p2, m1, m2):
     """
     sep_scalar_vec = Particle3D.seperation(p1,p2)
     sep_scalar= np.linalg.norm(sep_scalar_vec)
-    potential = (G*m1*m2)/sep_scalar
+    potential = -(G*m1*m2)/sep_scalar
     force = -(G*m1*m2*sep_scalar_vec)/(sep_scalar**3)
     return force, potential
 
@@ -91,7 +91,7 @@ def apoperi(particle, apo, peri):
     :return: Lists of all particles' updated apo- and periapses
     """
     #Loop for all planets except sun
-    for f in range(1,len(particle)-2):
+    for f in range(1,len(particle)-1):
         #All separations excluding the moon. Special consideration for the moon.
         if f != 4:
             #Calculate separation
@@ -248,8 +248,8 @@ def main():
 
     ###############APO AND PERIAPSES CODE##################
     #Initialise apo and periapsis lists of required length
-    apo = [None] * (len(particle)-2)
-    peri = [None] * (len(particle)-2)
+    apo = [None] * (len(particle)-1)
+    peri = [None] * (len(particle)-1)
     #Initiate calculation of initial apo and periapses
     apo, peri = apoperi(particle, apo, peri)
 
@@ -353,7 +353,7 @@ def main():
     #Write apo and periapses to files
     apfile = open("apoperifile.txt", "w")
     #creates loop to make readable while skipping repetition
-    for f in range(0,len(particle)-2):
+    for f in range(0,len(particle)-1):
         apfile.write("=============================== \n")
         apfile.write("Particle " + str(particle[f].label) + " - " + str(plabel[f]) + (" \n"))
         apfile.write("Apoapsis - " + str(apo[f]) + " \n" + "Periapsis - " + str(peri[f]) + " \n")
