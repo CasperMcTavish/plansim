@@ -11,12 +11,39 @@ from Particle3D import Particle3D
 
 #add the Gravitational constant
 #Units used: km, kg and days
-G = 4.98217402E-10
 #For G, in units km^3/(kg*days^2)
 #create particle format
 
 ##files neeeding loaded in, particle positions, velocities & constants (numstep, dt, G)
 ##Particle positions taken from 28th February 2020 from NASA
+
+def fileread(arg):
+    if len(arg) != 4:
+        print("Wrong number of arguments.")
+        print("Usage: " + arg[0] + " " + arg[1] + " " + arg[2] + arg[3] + " " + " Another file")
+        return
+    else:
+        #Collect input filenames
+        inputfile_name1 = arg[1]
+        inputfile_name2 = arg[2]
+        #register vmd file name
+        vmdfile = arg[3]
+
+    # Open input files
+    positions = open(inputfile_name1, "r")
+    int_param = open(inputfile_name2, "r")
+
+    # Collect simulation parameters from 2nd input file
+
+    # To portray real physics, the user is asked to input the time the procedure is finished, rather than the amount of steps taken.
+    ##I think ^^^ this comment is no longer true, I've added it as a question to ask on tuesday.
+    file_handle2 = int_param
+    G,dt,time_end = Particle3D.from_file2(file_handle2)
+    #Convert from string to float and int
+    G = float(G)
+    dt = int(dt)
+    time_end = int(time_end)
+    return G,dt,time_end,vmdfile,positions
 
 #Create a general function that will be used to calculate both Kinetic energy and potential energy
 def newton(p1, p2, m1, m2):
@@ -139,33 +166,6 @@ def main():
     # code written; python3 Velocityverlet.py poskms.txt numsteps.txt
     ##Need to add vmd.xyz as argument?
 
-    ############### FILE HANDLING #############
-    ##Does this need to be here anymore? Should we adjust this to ask for the right amount of files?
-    if len(sys.argv) != 3:
-        #print("Wrong number of arguments.")
-        #print("Usage: " + sys.argv[0] + sys.argv[1] +" Another file")
-        return
-    else:
-        #Collect input filenames
-        inputfile_name1 = sys.argv[1]
-        inputfile_name2 = sys.argv[2]
-
-    # Open input files
-    positions = open(inputfile_name1, "r")
-    int_param = open(inputfile_name2, "r")
-
-    # Collect simulation parameters from 2nd input file
-
-    # To portray real physics, the user is asked to input the time the procedure is finished, rather than the amount of steps taken.
-    ##I think ^^^ this comment is no longer true, I've added it as a question to ask on tuesday.
-    file_handle2 = int_param
-    G,dt,time_end = Particle3D.from_file2(file_handle2)
-    #Convert from string to float and int
-    G = float(G)
-    dt = int(dt)
-    time_end = int(time_end)
-    ##this is only included so I dont have to remove numstep, can remove
-
     ######################PARTICLE CREATION#####################
 
     # Initialise particle list
@@ -201,7 +201,8 @@ def main():
     # Lists that will contain the time evolution of the position of both particles and their seperation as well as their energy will be taken
     # Since the position of particles is a numpy array, we need to find their norm so we can plot it
     time_list = [time]
-
+    #Used for plotting the moon-earth separation
+    moonsep_list = []
     #Labelling each particle
     ##Should be based on poskms or some other file. Kind of hard-code-y but useful right now.
     plabel = []                                 #Particle No.           #Read in from position file as
@@ -224,7 +225,7 @@ def main():
     #####################WRITING TO FILES#####################
     #Open Files
     efile = open("energy.txt","w")
-    partfile = open("vmd"+".xyz","w")
+    partfile = open(vmdfile,"w")
 
     #Write total energy to Files
     #Resetting energy value
@@ -252,6 +253,13 @@ def main():
     peri = [None] * (len(particle)-1)
     #Initiate calculation of initial apo and periapses
     apo, peri = apoperi(particle, apo, peri)
+
+    ################ MOON SEPARATION ##################
+    # Finding the separation of moon to the earth against
+    # time to plot to a graph, allows for better understanding
+    # of what is an acceptable dt value
+    moonsep_list.append(np.linalg.norm(Particle3D.seperation(particle[4].position,particle[5].position)))
+
 
     ###################TIME PERIOD CODE########################
     #IDEA: Take the initial seperation from the sun of each object.
@@ -330,7 +338,11 @@ def main():
         totalenergy.append(sum(energy))
         efile.write(str(sum(energy))+ "\n")
 
-
+        ################ MOON SEPARATION ##################
+        # Finding the separation of moon to the earth against
+        # time to plot to a graph, allows for better understanding
+        # of what is an acceptable dt value
+        moonsep_list.append(np.linalg.norm(Particle3D.seperation(particle[4].position,particle[5].position)))
 
         # Append information to data lists
         time_list.append(time)
@@ -345,18 +357,22 @@ def main():
     for c in range(1,len(particle)-1):
         #counter[c] = counter[c] + (np.dot(p_const_initial[c],Particle3D.seperation(particle[0].position,particle[c].position))/(np.linalg.norm(p_const_initial[c])*np.linalg.norm(Particle3D.seperation(particle[0].position,particle[c].position))))/(math.pi)
     #Find the Time period of each object based on Earth years.
-        counter[c] = (time_end/365)/counter[c]
+        #Ensures no division by 0
+        if counter[c] != 0:
+            counter[c] = (time_end/365)/counter[c]
     # Close energy and vmd output files
     efile.close()
     partfile.close()
 
+
+
     #Write apo and periapses to files
     apfile = open("apoperifile.txt", "w")
     #creates loop to make readable while skipping repetition
-    for f in range(0,len(particle)-1):
+    for f in range(1,len(particle)-1):
         apfile.write("=============================== \n")
-        apfile.write("Particle " + str(particle[f].label) + " - " + str(plabel[f]) + (" \n"))
-        apfile.write("Apoapsis - " + str(apo[f]) + " \n" + "Periapsis - " + str(peri[f]) + " \n")
+        apfile.write("Particle " + str(particle[f].label) + " - " + str(plabel[f]) + " \n")
+        apfile.write("Apoapsis - " + str(format(apo[f],"E")) + " km" " \n" + "Periapsis - " + str(format(peri[f],"E")) + " km" + " \n")
     apfile.write("=============================== \n")
 
     #close file
@@ -372,13 +388,24 @@ def main():
     periodfile.close()
 
     # Plot Total Energy of the system.
-    pyplot.title('Velocity Verlet integrator: total energy vs time')
+    pyplot.title('Solar System simulation: total energy vs time')
     pyplot.xlabel('Time/Days')
     pyplot.ylabel('Energy/1.3996E-4 Joules')
     pyplot.plot(time_list, totalenergy,'r', label ="Total Energy" )
     pyplot.legend(loc = "best")
     pyplot.show()
 
-# Execute main method, but only when directly invoked
-if __name__ == "__main__":
-    main()
+    # Plot Moon-Earth separation in the system.
+    pyplot.title('Moon-Earth Separation: separation vs time')
+    pyplot.xlabel('Time/Days')
+    pyplot.ylabel('Separation/km')
+    pyplot.plot(time_list, moonsep_list,'r', label ="moon position relative to earth" )
+    pyplot.legend(loc = "best")
+    pyplot.show()
+
+#Execute CODE
+
+#Load in variables first from file
+G,dt,time_end,vmdfile,positions = fileread(sys.argv)
+#Execute main code
+main()

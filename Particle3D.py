@@ -45,7 +45,8 @@ class Particle3D(object):
         Define output format.
         The output will be a linewith four parameters: the label, and the x-y-z values of the position vector
         """
-        return str(self.label)+" "+ str(self.position[0])+" "+ str(self.position[1]) +" "+str(self.position[2])
+        #int is included to reduce VMD file size
+        return str(self.label)+" "+ str(int(self.position[0]))+" "+ str(int(self.position[1])) +" "+str(int(self.position[2]))
 
 
     def kinetic_energy(self):
