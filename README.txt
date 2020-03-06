@@ -79,10 +79,12 @@ Graphs
 ===============
 The output of the simulation is:
 a) Solar System simulation: total energy vs time
+
 Plot of the energy of the system, against the time of the simulation. 
 Units are in 1.3996E-4 Joules and days.
 
 b) Moon-Earth Separation: separation vs time
+
 Plot of the separation of the Moon & Earth, against the time of the simulation. 
 Units are in km and days.
 
