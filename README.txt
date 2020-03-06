@@ -99,4 +99,9 @@ b)apoperifile.txt
 Contains the peri and apoapsis of all planets and Halley's comet around the Sun.
 Units used: Km
 
+c) energy.txt
+
+Contains the total energy of the system at each timestep in a list
+Units used: 1.3996E-4 Joules and days.
+
 ***Note: Both apoperifile and time_periodfile have additional accounts to the time period and apo- and periapsis of the moon around EARTH. 
