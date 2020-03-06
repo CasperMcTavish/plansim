@@ -77,7 +77,6 @@ NOTE: This file size can vary largely based on your numstepsFAST/SLOW.txt file, 
 
 Graphs
 ===============
-The output of the simulation is:
 a) Solar System simulation: total energy vs time
 
 Plot of the energy of the system, against the time of the simulation. 
