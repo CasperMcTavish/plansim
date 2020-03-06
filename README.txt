@@ -14,6 +14,8 @@ CONTENTS
 		Files
 			timeperiodfile.txt
 			apoperifile.txt
+		VMD
+			Utilising the VMD file
 
 ===================
 RUNNING THE PROGRAM
@@ -22,6 +24,10 @@ RUNNING THE PROGRAM
 Instructions on how to run the program:
 In bash the files needed to be loaded so that the program runs are, in that order:
 		VelocityVerlet3D poskms.txt numstepsFAST.txt vmd.xyz 
+
+So in the terminal it will appear as:
+python3 VelocityVerlet3D poskms.txt numstepsFAST.txt vmd.xyz
+(^or your equivalent)
 
 The units used in the simulation are km, kg and days
 
@@ -105,3 +111,21 @@ Contains the total energy of the system at each timestep in a list
 Units used: 1.3996E-4 Joules and days.
 
 ***Note: Both apoperifile and time_periodfile have additional accounts to the time period and apo- and periapsis of the moon around EARTH. 
+
+
+VMD
+==============
+Utilising the VMD file
+
+The program will also output a VMD file that can be used to visualise our orbits.
+This can be accomplished in the terminal with the use of the line;
+			vmd vmd.xyz
+			    (^or your name of choice)
+
+To better understand the legitimacy of our diagram, it is beneficial to add our trajectories and change our particles to 'points' as such;
+Graphics -> Representations... -> Draw style -> Drawing Method -> Points (adjust Size as needed)
+				  Trajectory -> Draw Multiple Frames -> 0:N 
+							(where N is no. of frames in VMD file
+							        as default can set to 200000)
+
+The orbits should now be apparent.
